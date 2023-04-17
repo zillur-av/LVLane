@@ -4,10 +4,10 @@ import cv2
 import os
 import argparse
 
-TRAIN_SET = ['label_data_0313.json', 'label_data_0601.json']
+#TRAIN_SET = ['label_data_0313.json', 'label_data_0601.json']
 VAL_SET = ['label_data_0531.json']
-TRAIN_VAL_SET = TRAIN_SET + VAL_SET
-TEST_SET = ['test_label.json']
+TRAIN_VAL_SET = VAL_SET
+#TEST_SET = ['LVNet_02.json']
 
 def gen_label_for_json(args, image_set):
     H, W = 720, 1280
@@ -89,17 +89,17 @@ def generate_label(args):
     save_dir = os.path.join(args.root, args.savedir)
     os.makedirs(save_dir, exist_ok=True)
     generate_json_file(save_dir, "train_val.json", TRAIN_VAL_SET)
-    generate_json_file(save_dir, "test.json", TEST_SET)
+    #generate_json_file(save_dir, "test.json", TEST_SET)
 
     print("generating train_val set...")
     gen_label_for_json(args, 'train_val')
-    print("generating test set...")
-    gen_label_for_json(args, 'test')
+    #print("generating test set...")
+    #gen_label_for_json(args, 'test')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', required=True, help='The root of the Tusimple dataset')
-    parser.add_argument('--savedir', type=str, default='seg_label', help='The root of the Tusimple dataset')
+    parser.add_argument('--savedir', type=str, default='seg_label2', help='The root of the Tusimple dataset')
     args = parser.parse_args()
 
     generate_label(args)

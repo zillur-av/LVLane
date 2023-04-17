@@ -13,6 +13,7 @@ featuremap_out_channel = 512
 
 griding_num = 100
 num_classes = 6
+
 heads = dict(type='LaneCls',
         dim = (griding_num + 1, 56, num_classes))
 
@@ -24,12 +25,6 @@ evaluator = dict(
     type='Tusimple',
 )
 
-import math
-scheduler = dict(
-    type = 'LambdaLR',
-    lr_lambda = lambda _iter : math.pow(1 - _iter/total_iter, 0.9)
-)
-
 optimizer = dict(
   type = 'SGD',
   lr = 0.025,
@@ -37,9 +32,10 @@ optimizer = dict(
   momentum = 0.9
 )
 
-epochs = 150
+epochs = 2
 batch_size = 4
-total_iter = (3616 // batch_size + 1) * epochs 
+total_iter = (12 // batch_size + 1) * epochs 
+
 import math
 scheduler = dict(
     type = 'LambdaLR',
@@ -56,7 +52,7 @@ ori_img_h = 720
 ori_img_w = 1280
 img_h = 288
 img_w = 800
-cut_height=0
+cut_height= 0
 sample_y = range(710, 150, -10)
 
 dataset_type = 'TuSimple'
@@ -102,7 +98,7 @@ dataset = dict(
 )
 
 
-workers = 12
+workers = 8
 ignore_label = 255
 log_interval = 100
 eval_ep = 1

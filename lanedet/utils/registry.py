@@ -63,10 +63,13 @@ def build_from_cfg(cfg, registry, default_args=None):
     """
     assert isinstance(cfg, dict) and 'type' in cfg
     assert isinstance(default_args, dict) or default_args is None
+    
     args = cfg.copy()
-    obj_type = args.pop('type') 
+    obj_type = args.pop('type')
+
     if is_str(obj_type):
         obj_cls = registry.get(obj_type)
+        #print(obj_cls)
         if obj_cls is None:
             raise KeyError('{} is not in the {} registry'.format(
                 obj_type, registry.name))
@@ -75,6 +78,7 @@ def build_from_cfg(cfg, registry, default_args=None):
     else:
         raise TypeError('type must be a str or valid type, but got {}'.format(
             type(obj_type)))
+    
     if default_args is not None:
         for name, value in default_args.items():
             args.setdefault(name, value)

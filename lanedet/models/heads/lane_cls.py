@@ -6,7 +6,7 @@ import numpy as np
 from lanedet.core.lane import Lane
 import scipy
 from lanedet.models.losses.focal_loss import SoftmaxFocalLoss
-
+import inspect
 from ..registry import HEADS 
 
 @HEADS.register_module
@@ -16,13 +16,22 @@ class LaneCls(nn.Module):
         self.cfg = cfg
         chan = cfg.featuremap_out_channel
         self.pool = torch.nn.Conv2d(chan, 8, 1)
+        self.cat_dim = (5, 6)
         self.dim = dim
         self.total_dim = np.prod(dim)
+        
         self.cls = torch.nn.Sequential(
             torch.nn.Linear(1800, 2048),
             torch.nn.ReLU(),
             torch.nn.Linear(2048, self.total_dim),
         )
+
+        self.category = torch.nn.Sequential(
+            torch.nn.Linear(1800, 512),
+            torch.nn.ReLU(),
+            torch.nn.Linear(512, 30)
+           )
+        
 
     def postprocess(self, out, localization_type='rel', flip_updown=True):
         predictions = []
@@ -40,9 +49,12 @@ class LaneCls(nn.Module):
                 idx = np.arange(griding_num) + 1
                 idx = idx.reshape(-1, 1, 1)
                 loc = np.sum(prob * idx, axis=0)
+                #print(loc, loc.shape)
                 out_j = np.argmax(out_j, axis=0)
+                #print(out_j, out_j.shape)
                 loc[out_j == griding_num] = 0
                 out_j = loc
+                #print(out_j, out_j.shape)
             else:
                 raise NotImplementedError
             predictions.append(out_j)
@@ -50,12 +62,20 @@ class LaneCls(nn.Module):
 
     def loss(self, output, batch):
         criterion = SoftmaxFocalLoss(2)
-
+        total_loss = 0
         loss_stats = {}
         cls_loss = criterion(output['cls'], batch['cls_label'])
-        loss_stats.update({'cls_loss': cls_loss})
+        
+        loss_fn = torch.nn.CrossEntropyLoss()
+        #print(output['category'].shape, batch['category'].shape)
+        #print(output['cls'].shape, batch['cls_label'].shape)
+        score = F.softmax(output['category'], dim=1)
+        cat_loss = loss_fn(score, batch['category'])
 
-        ret = {'loss': cls_loss, 'loss_stats': loss_stats}
+        loss_stats.update({'cls_loss': cls_loss, 'cat_loss': cat_loss})
+        total_loss = cls_loss + cat_loss
+
+        ret = {'loss': total_loss , 'loss_stats': loss_stats}
 
         return ret
     
@@ -75,10 +95,12 @@ class LaneCls(nn.Module):
                     x = ((out_i[k]-0.5) * self.cfg.ori_img_w / (griding_num - 1))
                     y = sample_y[k]
                     coord.append([x, y])
+                #print(coord)
                 coord = np.array(coord)
                 coord = np.flip(coord, axis=0)
                 coord[:, 0] /= self.cfg.ori_img_w
                 coord[:, 1] /= self.cfg.ori_img_h
+                #print(coord)
                 lanes.append(Lane(coord))
             ret.append(lanes)
         return ret
@@ -87,5 +109,8 @@ class LaneCls(nn.Module):
         x = x[-1]
         x = self.pool(x).view(-1, 1800)
         cls = self.cls(x).view(-1, *self.dim)
-        output = {'cls': cls}
+        category = self.category(x).view(-1, *self.cat_dim)
+        output = {'cls': cls, 'category':category}
+        #print(category)
+
         return output 

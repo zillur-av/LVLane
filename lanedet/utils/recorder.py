@@ -46,7 +46,7 @@ class Recorder(object):
 
         init_logger(self.log_path)
         self.logger = logging.getLogger(__name__)
-        self.logger.info('Config: \n' + cfg.text)
+        #self.logger.info('Config: \n' + cfg.text)
 
         self.save_cfg(cfg)
         self.cp_projects(self.work_dir)

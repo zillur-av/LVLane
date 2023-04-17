@@ -14,10 +14,14 @@ class SoftmaxFocalLoss(nn.Module):
         self.nll = nn.NLLLoss(ignore_index=ignore_lb)
 
     def forward(self, logits, labels):
+        #print(f"logit shape: {logits.shape}")
+        #print(f"label shape: {labels.shape}")
         scores = F.softmax(logits, dim=1)
         factor = torch.pow(1.-scores, self.gamma)
         log_score = F.log_softmax(logits, dim=1)
         log_score = factor * log_score
+        #print(f"log score shape: {log_score.shape}")
+        #print("-------------")
         loss = self.nll(log_score, labels)
         return loss
 

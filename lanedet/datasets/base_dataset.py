@@ -10,7 +10,7 @@ from .registry import DATASETS
 from .process import Process
 from lanedet.utils.visualization import imshow_lanes
 from mmcv.parallel import DataContainer as DC
-
+import inspect
 
 @DATASETS.register_module
 class BaseDataset(Dataset):
@@ -21,7 +21,6 @@ class BaseDataset(Dataset):
         self.data_root = data_root
         self.training = 'train' in split 
         self.processes = Process(processes, cfg)
-
 
     def view(self, predictions, img_metas):
         img_metas = [item for img_meta in img_metas.data for item in img_meta]
@@ -34,13 +33,15 @@ class BaseDataset(Dataset):
             imshow_lanes(img, lanes, out_file=out_file)
 
     def __len__(self):
+        'Denotes the total number of samples'
         return len(self.data_infos)
 
     def __getitem__(self, idx):
+        'Generates one sample of data'
         data_info = self.data_infos[idx]
+        #print(data_info)
         if not osp.isfile(data_info['img_path']):
             raise FileNotFoundError('cannot find file: {}'.format(data_info['img_path']))
-
         img = cv2.imread(data_info['img_path'])
 
         img = img[self.cfg.cut_height:, :, :]
@@ -57,9 +58,14 @@ class BaseDataset(Dataset):
 
         sample = self.processes(sample)
         meta = {'full_img_path': data_info['img_path'],
-                'img_name': data_info['img_name']}
+                'img_name': data_info['img_name'],
+                'category': data_info['categories']}
         meta = DC(meta, cpu_only=True)
-        sample.update({'meta': meta})
+        sample.update({'meta': meta})   #generate one dict with img, img_path, lane pixels, seg_img
 
+        category = data_info['categories']
+        category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
+        sample['category'] = torch.tensor(category)
+        #print(sample['category'],  data_info['img_name'])
 
-        return sample 
+        return sample

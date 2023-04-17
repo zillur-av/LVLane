@@ -14,6 +14,7 @@ class Process(object):
     def __init__(self, processes, cfg):
         assert isinstance(processes, collections.abc.Sequence)
         self.processes = []
+        
         for process in processes:
             if isinstance(process, dict):
                 process = build_from_cfg(process, PROCESS, default_args=dict(cfg=cfg))

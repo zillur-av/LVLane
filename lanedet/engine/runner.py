@@ -24,12 +24,13 @@ class Runner(object):
         self.cfg = cfg
         self.recorder = build_recorder(self.cfg)
         self.net = build_net(self.cfg)
+
         # self.net.to(torch.device('cuda'))
         # self.net = torch.nn.parallel.DataParallel(
         #         self.net, device_ids = range(self.cfg.gpus)).cuda()
         self.net = MMDataParallel(
                 self.net, device_ids = range(self.cfg.gpus)).cuda()
-        self.recorder.logger.info('Network: \n' + str(self.net))
+        #self.recorder.logger.info('Network: \n' + str(self.net))
         self.resume()
         self.optimizer = build_optimizer(self.cfg, self.net)
         self.scheduler = build_scheduler(self.cfg, self.optimizer)
@@ -63,12 +64,16 @@ class Runner(object):
                 break
             date_time = time.time() - end
             self.recorder.step += 1
+            #print(data['img'].shape)
             data = self.to_cuda(data)
+
             output = self.net(data)
+            #print(output.keys())
             self.optimizer.zero_grad()
             loss = output['loss']
             loss.backward()
             self.optimizer.step()
+            
             if not self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
             if self.warmup_scheduler:
@@ -87,11 +92,16 @@ class Runner(object):
     def train(self):
         self.recorder.logger.info('Build train loader...')
         train_loader = build_dataloader(self.cfg.dataset.train, self.cfg, is_train=True)
-
+        # Check out what's inside the training dataloader
+        train_features_batch = next(iter(train_loader))
+        #print(train_features_batch['cls_label'].shape)
+        #print(train_features_batch["category"].shape)
+    ''' 
         self.recorder.logger.info('Start training...')
         for epoch in range(self.cfg.epochs):
             self.recorder.epoch = epoch
             self.train_epoch(epoch, train_loader)
+    
             if (epoch + 1) % self.cfg.save_ep == 0 or epoch == self.cfg.epochs - 1:
                 self.save_ckpt()
             if (epoch + 1) % self.cfg.eval_ep == 0 or epoch == self.cfg.epochs - 1:
@@ -100,7 +110,7 @@ class Runner(object):
                 break
             if self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
-
+    '''
     def validate(self):
         if not self.val_loader:
             self.val_loader = build_dataloader(self.cfg.dataset.val, self.cfg, is_train=False)

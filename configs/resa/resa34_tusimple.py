@@ -20,7 +20,8 @@ aggregator = dict(
     conv_stride=9,
 )
 
-sample_y=range(710, 150, -10)
+sample_y=range(710, 350, -10)
+
 heads = dict(
     type='LaneSeg',
     decoder=dict(type='BUSD'),
@@ -39,6 +40,7 @@ optimizer = dict(
 epochs = 150
 batch_size = 8
 total_iter = (3616 // batch_size + 1) * epochs 
+
 import math
 scheduler = dict(
     type = 'LambdaLR',
