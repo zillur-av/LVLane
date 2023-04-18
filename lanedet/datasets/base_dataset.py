@@ -19,7 +19,8 @@ class BaseDataset(Dataset):
         self.cfg = cfg
         self.logger = logging.getLogger(__name__)
         self.data_root = data_root
-        self.training = 'train' in split 
+        self.training = 'train' in split
+        self.validation = 'val' in split
         self.processes = Process(processes, cfg)
 
     def view(self, predictions, img_metas):
@@ -48,7 +49,7 @@ class BaseDataset(Dataset):
         sample = data_info.copy()
         sample.update({'img': img})
 
-        if self.training:
+        if self.training or self.validation:
             label = cv2.imread(sample['mask_path'], cv2.IMREAD_UNCHANGED)
             if len(label.shape) > 2:
                 label = label[:, :, 0]
@@ -66,6 +67,5 @@ class BaseDataset(Dataset):
         category = data_info['categories']
         category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
         sample['category'] = torch.tensor(category)
-        #print(sample['category'],  data_info['img_name'])
 
         return sample

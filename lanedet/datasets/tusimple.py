@@ -3,19 +3,22 @@ import numpy as np
 import cv2
 import os
 import json
+import torch
 import torchvision
 from .base_dataset import BaseDataset
 from lanedet.utils.tusimple_metric import LaneEval
 from .registry import DATASETS
 import logging
 import random
+import torch.nn.functional as F
+
 
 SPLIT_FILES = {
     #'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json'],
-    'trainval': ['label_data_0531.json'],
-    'train': ['label_data_0313.json', 'label_data_0601.json'],
-    'val': ['label_data_0531.json'],
-    'test': ['test_label.json'],
+    #'trainval': ['label_data_0531.json'],
+    'trainval': ['label_data_0313.json', 'label_data_0531.json'],
+    'val': ['label_data_0601.json'],
+    'test': ['label_data_0601.json'],
 }
 
 
@@ -86,9 +89,27 @@ class TuSimple(BaseDataset):
         with open(filename, 'w') as output_file:
             output_file.write('\n'.join(lines))
 
-    def evaluate(self, predictions, output_basedir, runtimes=None):
+    def evaluate_detection(self, predictions, output_basedir, runtimes=None):
         pred_filename = os.path.join(output_basedir, 'tusimple_predictions.json')
         self.save_tusimple_predictions(predictions, pred_filename, runtimes)
         result, acc = LaneEval.bench_one_submit(pred_filename, self.cfg.test_json_file)
         self.logger.info(result)
         return acc
+
+    # Calculate accuracy (a classification metric)
+    def accuracy_fn(self, y_true, y_pred):
+        """Calculates accuracy between truth labels and predictions.
+        Args:
+            y_true (torch.Tensor): Truth labels for predictions.
+            y_pred (torch.Tensor): Predictions to be compared to predictions.
+        Returns:
+            [torch.float]: Accuracy value between y_true and y_pred, e.g. 78.45
+        """
+        correct = torch.eq(y_true, y_pred).sum().item()
+        acc = (correct / torch.numel(y_pred))
+        return acc
+
+    def evaluate_classification(self, predictions, ground_truth):
+        score = F.softmax(predictions, dim=1)
+        y_pred = score.argmax(dim=1)
+        return self.accuracy_fn(ground_truth, y_pred)

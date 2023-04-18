@@ -32,9 +32,9 @@ optimizer = dict(
   momentum = 0.9
 )
 
-epochs = 2
+epochs = 30
 batch_size = 4
-total_iter = (12 // batch_size + 1) * epochs 
+total_iter = (3216 // batch_size + 1) * epochs 
 
 import math
 scheduler = dict(
@@ -71,9 +71,17 @@ train_process = [
 ]
 
 val_process = [
+    dict(type='GenerateLaneCls', row_anchor=row_anchor,
+        num_cols=griding_num, num_classes=num_classes),
     dict(type='Resize', size=(img_w, img_h)),
     dict(type='Normalize', img_norm=img_norm),
-    dict(type='ToTensor', keys=['img']),
+    dict(type='ToTensor', keys=['img', 'cls_label']),
+]
+
+test_process = [
+    dict(type='Resize', size=(img_w, img_h)),
+    dict(type='Normalize', img_norm=img_norm),
+    dict(type='ToTensor', keys=['img', 'cls_label']),
 ]
 
 dataset = dict(
@@ -86,7 +94,7 @@ dataset = dict(
     val=dict(
         type=dataset_type,
         data_root=dataset_path,
-        split='test',
+        split='val',
         processes=val_process,
     ),
     test=dict(
@@ -104,5 +112,5 @@ log_interval = 100
 eval_ep = 1
 save_ep = epochs
 row_anchor='tusimple_row_anchor'
-test_json_file='data/tusimple/test_label.json'
+test_json_file='data/tusimple/label_data_0601.json'
 lr_update_by_epoch = False

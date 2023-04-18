@@ -16,7 +16,7 @@ class LaneCls(nn.Module):
         self.cfg = cfg
         chan = cfg.featuremap_out_channel
         self.pool = torch.nn.Conv2d(chan, 8, 1)
-        self.cat_dim = (5, 6)
+        self.cat_dim = (8, 6)
         self.dim = dim
         self.total_dim = np.prod(dim)
         
@@ -29,7 +29,7 @@ class LaneCls(nn.Module):
         self.category = torch.nn.Sequential(
             torch.nn.Linear(1800, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(512, 30)
+            torch.nn.Linear(512, 48)
            )
         
 
@@ -49,12 +49,9 @@ class LaneCls(nn.Module):
                 idx = np.arange(griding_num) + 1
                 idx = idx.reshape(-1, 1, 1)
                 loc = np.sum(prob * idx, axis=0)
-                #print(loc, loc.shape)
                 out_j = np.argmax(out_j, axis=0)
-                #print(out_j, out_j.shape)
                 loc[out_j == griding_num] = 0
                 out_j = loc
-                #print(out_j, out_j.shape)
             else:
                 raise NotImplementedError
             predictions.append(out_j)
@@ -64,7 +61,7 @@ class LaneCls(nn.Module):
         criterion = SoftmaxFocalLoss(2)
         total_loss = 0
         loss_stats = {}
-        cls_loss = criterion(output['cls'], batch['cls_label'])
+        det_loss = criterion(output['cls'], batch['cls_label'])
         
         loss_fn = torch.nn.CrossEntropyLoss()
         #print(output['category'].shape, batch['category'].shape)
@@ -72,8 +69,8 @@ class LaneCls(nn.Module):
         score = F.softmax(output['category'], dim=1)
         cat_loss = loss_fn(score, batch['category'])
 
-        loss_stats.update({'cls_loss': cls_loss, 'cat_loss': cat_loss})
-        total_loss = cls_loss + cat_loss
+        loss_stats.update({'det_loss': det_loss, 'cat_loss': cat_loss})
+        total_loss = det_loss + cat_loss
 
         ret = {'loss': total_loss , 'loss_stats': loss_stats}
 
@@ -95,12 +92,10 @@ class LaneCls(nn.Module):
                     x = ((out_i[k]-0.5) * self.cfg.ori_img_w / (griding_num - 1))
                     y = sample_y[k]
                     coord.append([x, y])
-                #print(coord)
                 coord = np.array(coord)
                 coord = np.flip(coord, axis=0)
                 coord[:, 0] /= self.cfg.ori_img_w
                 coord[:, 1] /= self.cfg.ori_img_h
-                #print(coord)
                 lanes.append(Lane(coord))
             ret.append(lanes)
         return ret
@@ -110,7 +105,6 @@ class LaneCls(nn.Module):
         x = self.pool(x).view(-1, 1800)
         cls = self.cls(x).view(-1, *self.dim)
         category = self.category(x).view(-1, *self.cat_dim)
-        output = {'cls': cls, 'category':category}
-        #print(category)
+        output = {'cls': cls, 'category': category}
 
         return output 

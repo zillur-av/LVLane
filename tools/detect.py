@@ -18,7 +18,7 @@ class Detect(object):
         self.cfg = cfg
         self.processes = Process(cfg.val_process, cfg)
         self.net = build_net(self.cfg)
-        print(self.net)
+        #print(self.net)
         self.net = torch.nn.parallel.DataParallel(
                 self.net, device_ids = range(1)).cuda()
         self.net.eval()
@@ -29,14 +29,14 @@ class Detect(object):
         img = ori_img[self.cfg.cut_height:, :, :].astype(np.float32)
         data = {'img': img, 'lanes': []}
         data = self.processes(data)
-        data['img'] = data['img'].unsqueeze(0) # add one dimension; make it (1,3,h,w) shape
-        data.update({'img_path':img_path, 'ori_img':ori_img}) # add image path and original image in the dict
+        data['img'] = data['img'].unsqueeze(0)                 # add one dimension; make it (1,3,h,w) shape
+        data.update({'img_path':img_path, 'ori_img':ori_img})  # add image path and original image in the dict
         return data
 
     def inference(self, data):
         with torch.no_grad():
             data = self.net(data)
-            print(data)
+            #print(data)
             data = self.net.module.get_lanes(data)
         return data
 
