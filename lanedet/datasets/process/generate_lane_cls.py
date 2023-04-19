@@ -45,10 +45,10 @@ def _grid_pts(pts, num_cols, w):
 
 @PROCESS.register_module
 class GenerateLaneCls(object):
-    def __init__(self, row_anchor, num_cols, num_classes, cfg):
+    def __init__(self, row_anchor, num_cols, num_lanes, cfg):
         self.row_anchor = eval(row_anchor)
         self.num_cols = num_cols        #100
-        self.num_classes = num_classes  #6
+        self.num_lanes = num_lanes  #6
 
     def __call__(self, sample):
         label = sample['mask']    # seg_mask
@@ -57,12 +57,12 @@ class GenerateLaneCls(object):
             scale_f = lambda x : int((x * 1.0/288) * h)
             sample_tmp = list(map(scale_f, self.row_anchor))       # list [160, ..... 710]
 
-        all_idx = np.zeros((self.num_classes, len(sample_tmp),2))  # 6x56x2
+        all_idx = np.zeros((self.num_lanes, len(sample_tmp),2))  # 6x56x2
         
         for i,r in enumerate(sample_tmp):
             label_r = np.asarray(label)[int(round(r))]     # 1280 pixels in each row anchor: shape = 1280x1
                                                            # pixels are actually lane numbers like 1 to 6
-            for lane_idx in range(1, self.num_classes+1):  # 1 to 6
+            for lane_idx in range(1, self.num_lanes+1):    # 1 to 6
                 pos = np.where(label_r == lane_idx)[0]     # x pixels of the lane location
                 if len(pos) == 0:
                     all_idx[lane_idx - 1, i, 0] = r        # if no lane, just put y values like 160, 170 
@@ -73,7 +73,7 @@ class GenerateLaneCls(object):
                 all_idx[lane_idx - 1, i, 1] = pos          # in x values, put mean of x pixels of the lane      
 
         all_idx_cp = all_idx.copy()
-        for i in range(self.num_classes):
+        for i in range(self.num_lanes):
             if np.all(all_idx_cp[i,:,1] == -1):            # if all x values are -1, ignore that lane
                 continue
 

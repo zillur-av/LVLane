@@ -12,10 +12,15 @@ backbone = dict(
 featuremap_out_channel = 512
 
 griding_num = 100
-num_classes = 6
+num_lanes = 6
+
+
+classification = True
+num_classes = 8
 
 heads = dict(type='LaneCls',
-        dim = (griding_num + 1, 56, num_classes))
+        dim = (griding_num + 1, 56, num_lanes),
+        cat_dim =(num_lanes, num_classes))
 
 trainer = dict(
     type='LaneCls'
@@ -31,18 +36,18 @@ optimizer = dict(
   weight_decay = 1e-4,
   momentum = 0.9
 )
+#optimizer = dict(type='Adam', lr= 0.025, weight_decay = 0.0001)  # 3e-4 for batchsize 8
 
 epochs = 30
 batch_size = 4
 total_iter = (3216 // batch_size + 1) * epochs 
 
 import math
+
 scheduler = dict(
     type = 'LambdaLR',
     lr_lambda = lambda _iter : math.pow(1 - _iter/total_iter, 0.9)
 )
-
-
 img_norm = dict(
     mean=[103.939, 116.779, 123.68],
     std=[1., 1., 1.]
@@ -64,7 +69,7 @@ train_process = [
     dict(type='RandomUDoffsetLABEL', max_offset=100),
     dict(type='RandomLROffsetLABEL', max_offset=200),
     dict(type='GenerateLaneCls', row_anchor=row_anchor,
-        num_cols=griding_num, num_classes=num_classes),
+        num_cols=griding_num, num_lanes=num_lanes),
     dict(type='Resize', size=(img_w, img_h)),
     dict(type='Normalize', img_norm=img_norm),
     dict(type='ToTensor', keys=['img', 'cls_label']),
@@ -72,16 +77,16 @@ train_process = [
 
 val_process = [
     dict(type='GenerateLaneCls', row_anchor=row_anchor,
-        num_cols=griding_num, num_classes=num_classes),
+        num_cols=griding_num, num_lanes=num_lanes),
     dict(type='Resize', size=(img_w, img_h)),
     dict(type='Normalize', img_norm=img_norm),
     dict(type='ToTensor', keys=['img', 'cls_label']),
 ]
 
-test_process = [
+infer_process = [
     dict(type='Resize', size=(img_w, img_h)),
     dict(type='Normalize', img_norm=img_norm),
-    dict(type='ToTensor', keys=['img', 'cls_label']),
+    dict(type='ToTensor', keys=['img']),
 ]
 
 dataset = dict(

@@ -11,28 +11,31 @@ from ..registry import HEADS
 
 @HEADS.register_module
 class LaneCls(nn.Module):
-    def __init__(self, dim, cfg=None):
+    def __init__(self, dim, cat_dim, cfg=None):
         super(LaneCls, self).__init__()
         self.cfg = cfg
         chan = cfg.featuremap_out_channel
         self.pool = torch.nn.Conv2d(chan, 8, 1)
-        self.cat_dim = (8, 6)
+        self.cat_dim = cat_dim
         self.dim = dim
         self.total_dim = np.prod(dim)
         
-        self.cls = torch.nn.Sequential(
+        self.det = torch.nn.Sequential(
             torch.nn.Linear(1800, 2048),
             torch.nn.ReLU(),
             torch.nn.Linear(2048, self.total_dim),
         )
 
-        self.category = torch.nn.Sequential(
-            torch.nn.Linear(1800, 512),
-            torch.nn.ReLU(),
-            torch.nn.Linear(512, 48)
-           )
-        
-
+        if self.cfg.classification:
+            self.category = torch.nn.Sequential(
+                torch.nn.Linear(1800, 512),
+                torch.nn.BatchNorm1d(512),
+                torch.nn.ReLU(),
+                torch.nn.Linear(512, 100),
+                torch.nn.ReLU(),
+                torch.nn.Linear(100, np.prod(self.cat_dim))
+               )
+            
     def postprocess(self, out, localization_type='rel', flip_updown=True):
         predictions = []
         griding_num = self.cfg.griding_num
@@ -61,31 +64,38 @@ class LaneCls(nn.Module):
         criterion = SoftmaxFocalLoss(2)
         total_loss = 0
         loss_stats = {}
-        det_loss = criterion(output['cls'], batch['cls_label'])
-        
-        loss_fn = torch.nn.CrossEntropyLoss()
-        #print(output['category'].shape, batch['category'].shape)
-        #print(output['cls'].shape, batch['cls_label'].shape)
-        score = F.softmax(output['category'], dim=1)
-        cat_loss = loss_fn(score, batch['category'])
+        det_loss = criterion(output['det'], batch['cls_label'])
 
-        loss_stats.update({'det_loss': det_loss, 'cat_loss': cat_loss})
-        total_loss = det_loss + cat_loss
+        if self.cfg.classification:       
+            loss_fn = torch.nn.CrossEntropyLoss()
+            classification_output = output['category'].reshape(self.cfg.batch_size*self.cfg.num_lanes, self.cfg.num_classes)
+            score = F.softmax(classification_output, dim=1)
+            targets = batch['category'].reshape(self.cfg.batch_size*self.cfg.num_lanes)
+
+            cat_loss = loss_fn(score, targets)
+
+            loss_stats.update({'det_loss': det_loss, 'cls_loss': cat_loss})
+            total_loss = det_loss + cat_loss
+        else:
+            loss_stats.update({'det_loss': det_loss})
+            total_loss = det_loss
 
         ret = {'loss': total_loss , 'loss_stats': loss_stats}
 
         return ret
     
     def get_lanes(self, pred):
-        predictions = self.postprocess(pred['cls']) 
+        predictions = self.postprocess(pred['det']) 
         ret = []
         griding_num = self.cfg.griding_num
         sample_y = list(self.cfg.sample_y)
         for out in predictions:
+            lane_indx = []
             lanes = []
             for i in range(out.shape[1]):
                 if sum(out[:, i] != 0) <= 2: continue
                 out_i = out[:, i]
+                lane_indx.append(i)
                 coord = []
                 for k in range(out.shape[0]):
                     if out[k, i] <= 0: continue
@@ -98,13 +108,15 @@ class LaneCls(nn.Module):
                 coord[:, 1] /= self.cfg.ori_img_h
                 lanes.append(Lane(coord))
             ret.append(lanes)
-        return ret
+        return ret, lane_indx
 
     def forward(self, x, **kwargs):
         x = x[-1]
         x = self.pool(x).view(-1, 1800)
-        cls = self.cls(x).view(-1, *self.dim)
-        category = self.category(x).view(-1, *self.cat_dim)
-        output = {'cls': cls, 'category': category}
-
+        det = self.det(x).view(-1, *self.dim)
+        if self.cfg.classification:
+            category = self.category(x).view(-1, *self.cat_dim)
+            output = {'det': det, 'category': category}
+        else:
+            output = {'det': det}
         return output 

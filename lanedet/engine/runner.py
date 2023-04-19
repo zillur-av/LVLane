@@ -30,7 +30,7 @@ class Runner(object):
         #         self.net, device_ids = range(self.cfg.gpus)).cuda()
         self.net = MMDataParallel(
                 self.net, device_ids = range(self.cfg.gpus)).cuda()
-        #self.recorder.logger.info('Network: \n' + str(self.net))
+        self.recorder.logger.info('Network: \n' + str(self.net))
         self.resume()
         self.optimizer = build_optimizer(self.cfg, self.net)
         self.scheduler = build_scheduler(self.cfg, self.optimizer)
@@ -125,29 +125,31 @@ class Runner(object):
             data = self.to_cuda(data)
             with torch.no_grad():
                 output = self.net(data)
-                #print(output.keys())
-                detection_output = self.net.module.get_lanes(output)
+                detection_output, _ = self.net.module.get_lanes(output)
                 detection_predictions.extend(detection_output)
-                classification_acc += self.val_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+                if self.cfg.classification:
+                    classification_acc += self.val_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
             if self.cfg.view:
                 self.val_loader.dataset.view(detection_output, data['meta'])
         
-        classification_acc /= len(self.val_loader)
-        
         detection_out = self.val_loader.dataset.evaluate_detection(detection_predictions, self.cfg.work_dir)
-        self.recorder.logger.info("Detection: " +str(detection_out) + "  "+ "classification accuracy: " + str(classification_acc))
         detection_metric = detection_out
         if detection_metric > self.detection_metric:
             self.detection_metric = detection_metric
             self.save_ckpt(is_best=True)
-        
-        classification_metric = classification_acc
-        if classification_metric > self.classification_metric:
-            self.classification_metric = classification_metric
-            #self.save_ckpt(is_best=True)
 
-        self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric) + "  " + 'Best classification metric: ' + str(self.classification_metric))
-        
+        if self.cfg.classification:
+            classification_acc /= len(self.val_loader)
+            self.recorder.logger.info("Detection: " +str(detection_out) + "  "+ "classification accuracy: " + str(classification_acc))      
+            classification_metric = classification_acc
+            if classification_metric > self.classification_metric:
+                self.classification_metric = classification_metric
+                #self.save_ckpt(is_best=True)
+            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric) + "  " + 'Best classification metric: ' + str(self.classification_metric))
+        else:
+            self.recorder.logger.info("Detection: " +str(detection_out))  
+            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric))
+       
     def save_ckpt(self, is_best=False):
         save_model(self.net, self.optimizer, self.scheduler,
                 self.recorder, is_best)

@@ -72,6 +72,12 @@ val_process = [
     dict(type='ToTensor', keys=['img']),
 ] 
 
+infer_process = [
+    dict(type='Resize', size=(img_width, img_height)),
+    dict(type='Normalize', img_norm=img_norm),
+    dict(type='ToTensor', keys=['img']),
+] 
+
 dataset_path = './data/tusimple'
 dataset = dict(
     train=dict(

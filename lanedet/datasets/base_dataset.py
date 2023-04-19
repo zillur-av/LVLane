@@ -11,6 +11,7 @@ from .process import Process
 from lanedet.utils.visualization import imshow_lanes
 from mmcv.parallel import DataContainer as DC
 import inspect
+from torch.nn.functional import one_hot
 
 @DATASETS.register_module
 class BaseDataset(Dataset):
@@ -40,7 +41,6 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx):
         'Generates one sample of data'
         data_info = self.data_infos[idx]
-        #print(data_info)
         if not osp.isfile(data_info['img_path']):
             raise FileNotFoundError('cannot find file: {}'.format(data_info['img_path']))
         img = cv2.imread(data_info['img_path'])
@@ -66,6 +66,6 @@ class BaseDataset(Dataset):
 
         category = data_info['categories']
         category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
-        sample['category'] = torch.tensor(category)
+        sample['category'] = torch.LongTensor(category)
 
         return sample

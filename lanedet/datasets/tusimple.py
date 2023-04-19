@@ -110,6 +110,6 @@ class TuSimple(BaseDataset):
         return acc
 
     def evaluate_classification(self, predictions, ground_truth):
-        score = F.softmax(predictions, dim=1)
-        y_pred = score.argmax(dim=1)
+        score = F.softmax(predictions, dim=2)
+        y_pred = score.argmax(dim=2)
         return self.accuracy_fn(ground_truth, y_pred)

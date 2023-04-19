@@ -12,11 +12,12 @@ from lanedet.utils.visualization import imshow_lanes
 from lanedet.utils.net_utils import load_network
 from pathlib import Path
 from tqdm import tqdm
+import torch.nn.functional as F
 
 class Detect(object):
     def __init__(self, cfg):
         self.cfg = cfg
-        self.processes = Process(cfg.val_process, cfg)
+        self.processes = Process(cfg.infer_process, cfg)
         self.net = build_net(self.cfg)
         #print(self.net)
         self.net = torch.nn.parallel.DataParallel(
@@ -36,24 +37,35 @@ class Detect(object):
     def inference(self, data):
         with torch.no_grad():
             data = self.net(data)
-            #print(data)
-            data = self.net.module.get_lanes(data)
-        return data
+            lane_detection, lane_indx = self.net.module.get_lanes(data)
+            if self.cfg.classification:
+                lane_classes = self.get_lane_class(data, lane_indx)
+                return lane_detection[0], lane_classes
+        return lane_detection
 
-    def show(self, data):
+    def get_lane_class(self, predictions, lane_indx):
+        score = F.softmax(predictions['category'], dim=2)
+        y_pred = score.argmax(dim=2).squeeze()
+        return y_pred[lane_indx].detach().cpu().numpy()
+
+    def show(self, data, lane_classes=None):
         out_file = self.cfg.savedir 
         if out_file:
             out_file = osp.join(out_file, osp.basename(data['img_path']))
         lanes = [lane.to_array(self.cfg) for lane in data['lanes']]
         #print(lanes)
-        imshow_lanes(data['ori_img'], lanes, show=self.cfg.show, out_file=out_file)
+        imshow_lanes(data['ori_img'], lanes, show=self.cfg.show, out_file=out_file, lane_classes=lane_classes)
 
     def run(self, data):
         data = self.preprocess(data)
-        data['lanes'] = self.inference(data)[0]
+        lane_classes = None
+        if self.cfg.classification:
+            data['lanes'], lane_classes = self.inference(data)
+        else:
+            data['lanes'] = self.inference(data)
         if self.cfg.show or self.cfg.savedir:
-            self.show(data)
-        return data
+            self.show(data, lane_classes)
+        #return data
 
 def get_img_paths(path):
     p = str(Path(path).absolute())  # os-agnostic absolute path
