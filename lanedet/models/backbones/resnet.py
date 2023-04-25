@@ -145,6 +145,7 @@ class ResNetWrapper(nn.Module):
 
     def forward(self, x):
         x = self.model(x)
+        #print(x[0].shape)
         if self.out:
             x[-1] = self.out(x[-1])
         return x

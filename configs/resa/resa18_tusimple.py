@@ -36,9 +36,9 @@ optimizer = dict(
 )
 
 
-epochs = 150
-batch_size = 8
-total_iter = (3616 // batch_size + 1) * epochs 
+epochs = 5
+batch_size = 4
+total_iter = (3216 // batch_size + 1) * epochs 
 import math
 scheduler = dict(
     type = 'LambdaLR',
@@ -72,12 +72,6 @@ val_process = [
     dict(type='ToTensor', keys=['img']),
 ] 
 
-infer_process = [
-    dict(type='Resize', size=(img_width, img_height)),
-    dict(type='Normalize', img_norm=img_norm),
-    dict(type='ToTensor', keys=['img']),
-] 
-
 dataset_path = './data/tusimple'
 dataset = dict(
     train=dict(
@@ -102,11 +96,11 @@ dataset = dict(
 
 
 batch_size = 8 
-workers = 12
+workers = 8
 num_classes = 6 + 1
 ignore_label = 255
 log_interval = 100
 eval_ep = 1
 save_ep = epochs
-test_json_file='data/tusimple/test_label.json'
+test_json_file='data/tusimple/label_data_0601.json'
 lr_update_by_epoch = False

@@ -23,7 +23,6 @@ class LaneSeg(nn.Module):
         segs = output['seg']
         segs = F.softmax(segs, dim=1)
         segs = segs.detach().cpu().numpy()
-        print(segs.shape)
         if 'exist' in output:
             exists = output['exist']
             exists = exists.detach().cpu().numpy()
@@ -33,7 +32,6 @@ class LaneSeg(nn.Module):
 
         ret = []
         for seg, exist in zip(segs, exists):
-            print(seg.shape)
             lanes = self.probmap2lane(seg, exist)
             ret.append(lanes)
         return ret
@@ -41,10 +39,8 @@ class LaneSeg(nn.Module):
     def probmap2lane(self, probmaps, exists=None):
         lanes = []
         probmaps = probmaps[1:, ...]
-        print(probmaps.shape)
         if exists is None:
             exists = [True for _ in probmaps]
-        print(exists)
         for probmap, exist in zip(probmaps, exists):
             if exist == 0:
                 continue

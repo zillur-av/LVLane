@@ -24,7 +24,6 @@ class Runner(object):
         self.cfg = cfg
         self.recorder = build_recorder(self.cfg)
         self.net = build_net(self.cfg)
-
         # self.net.to(torch.device('cuda'))
         # self.net = torch.nn.parallel.DataParallel(
         #         self.net, device_ids = range(self.cfg.gpus)).cuda()
@@ -39,8 +38,7 @@ class Runner(object):
         if self.cfg.optimizer.type == 'SGD':
             self.warmup_scheduler = warmup.LinearWarmup(
                 self.optimizer, warmup_period=5000)
-        self.detection_metric = 0.
-        self.classification_metric = 0.
+        self.metric = 0.
         self.val_loader = None
 
     def resume(self):
@@ -65,15 +63,12 @@ class Runner(object):
                 break
             date_time = time.time() - end
             self.recorder.step += 1
-            #print(data['img'].shape)
             data = self.to_cuda(data)
-
             output = self.net(data)
             self.optimizer.zero_grad()
             loss = output['loss']
             loss.backward()
             self.optimizer.step()
-            
             if not self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
             if self.warmup_scheduler:
@@ -92,17 +87,11 @@ class Runner(object):
     def train(self):
         self.recorder.logger.info('Build train loader...')
         train_loader = build_dataloader(self.cfg.dataset.train, self.cfg, is_train=True)
-        
-        # Check out what's inside the training dataloader
-        #train_features_batch = next(iter(train_loader))
-        #print(train_features_batch['cls_label'].shape)
 
-        
         self.recorder.logger.info('Start training...')
         for epoch in range(self.cfg.epochs):
             self.recorder.epoch = epoch
             self.train_epoch(epoch, train_loader)
-    
             if (epoch + 1) % self.cfg.save_ep == 0 or epoch == self.cfg.epochs - 1:
                 self.save_ckpt()
             if (epoch + 1) % self.cfg.eval_ep == 0 or epoch == self.cfg.epochs - 1:
@@ -111,45 +100,29 @@ class Runner(object):
                 break
             if self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
-        
+
     def validate(self):
         if not self.val_loader:
             self.val_loader = build_dataloader(self.cfg.dataset.val, self.cfg, is_train=False)
-        val_features_batch = next(iter(self.val_loader))
-        #print(val_features_batch.keys())
-        
-        classification_acc = 0
         self.net.eval()
-        detection_predictions = []
+        predictions = []
         for i, data in enumerate(tqdm(self.val_loader, desc=f'Validate')):
             data = self.to_cuda(data)
             with torch.no_grad():
                 output = self.net(data)
-                detection_output, _ = self.net.module.get_lanes(output)
-                detection_predictions.extend(detection_output)
-                if self.cfg.classification:
-                    classification_acc += self.val_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+                output = self.net.module.get_lanes(output)
+                predictions.extend(output)
             if self.cfg.view:
-                self.val_loader.dataset.view(detection_output, data['meta'])
-        
-        detection_out = self.val_loader.dataset.evaluate_detection(detection_predictions, self.cfg.work_dir)
-        detection_metric = detection_out
-        if detection_metric > self.detection_metric:
-            self.detection_metric = detection_metric
-            self.save_ckpt(is_best=True)
+                self.val_loader.dataset.view(output, data['meta'])
 
-        if self.cfg.classification:
-            classification_acc /= len(self.val_loader)
-            self.recorder.logger.info("Detection: " +str(detection_out) + "  "+ "classification accuracy: " + str(classification_acc))      
-            classification_metric = classification_acc
-            if classification_metric > self.classification_metric:
-                self.classification_metric = classification_metric
-                #self.save_ckpt(is_best=True)
-            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric) + "  " + 'Best classification metric: ' + str(self.classification_metric))
-        else:
-            self.recorder.logger.info("Detection: " +str(detection_out))  
-            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric))
-       
+        out = self.val_loader.dataset.evaluate(predictions, self.cfg.work_dir)
+        self.recorder.logger.info(out)
+        metric = out
+        if metric > self.metric:
+            self.metric = metric
+            self.save_ckpt(is_best=True)
+        self.recorder.logger.info('Best metric: ' + str(self.metric))
+
     def save_ckpt(self, is_best=False):
         save_model(self.net, self.optimizer, self.scheduler,
                 self.recorder, is_best)

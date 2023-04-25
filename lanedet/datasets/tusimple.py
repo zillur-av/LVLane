@@ -3,19 +3,15 @@ import numpy as np
 import cv2
 import os
 import json
-import torch
 import torchvision
 from .base_dataset import BaseDataset
 from lanedet.utils.tusimple_metric import LaneEval
 from .registry import DATASETS
 import logging
 import random
-import torch.nn.functional as F
-
 
 SPLIT_FILES = {
     #'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json'],
-    #'trainval': ['label_data_0531.json'],
     'trainval': ['label_data_0313.json', 'label_data_0531.json'],
     'val': ['label_data_0601.json'],
     'test': ['label_data_0601.json'],
@@ -26,10 +22,9 @@ SPLIT_FILES = {
 class TuSimple(BaseDataset):
     def __init__(self, data_root, split, processes=None, cfg=None):
         super().__init__(data_root, split, processes, cfg)
-        self.anno_files = SPLIT_FILES[split]
+        self.anno_files = SPLIT_FILES[split] 
         self.load_annotations()
         self.h_samples = list(range(160, 720, 10))
-        #print("finish")
 
     def load_annotations(self):
         self.logger.info('Loading TuSimple annotations...')
@@ -43,17 +38,15 @@ class TuSimple(BaseDataset):
                 data = json.loads(line)
                 y_samples = data['h_samples']
                 gt_lanes = data['lanes']
-                category = data['categories']
                 mask_path = data['raw_file'].replace('clips', 'seg_label')[:-3] + 'png'
                 lanes = [[(x, y) for (x, y) in zip(lane, y_samples) if x >= 0] for lane in gt_lanes]
                 lanes = [lane for lane in lanes if len(lane) > 0]
                 max_lanes = max(max_lanes, len(lanes))
                 self.data_infos.append({
-                    'img_path': osp.join(self.data_root, data['raw_file']),  #append all the samples in all the json files
+                    'img_path': osp.join(self.data_root, data['raw_file']),
                     'img_name': data['raw_file'],
                     'mask_path': osp.join(self.data_root, mask_path),
                     'lanes': lanes,
-                    'categories':category
                 })
 
         if self.training:
@@ -89,27 +82,9 @@ class TuSimple(BaseDataset):
         with open(filename, 'w') as output_file:
             output_file.write('\n'.join(lines))
 
-    def evaluate_detection(self, predictions, output_basedir, runtimes=None):
+    def evaluate(self, predictions, output_basedir, runtimes=None):
         pred_filename = os.path.join(output_basedir, 'tusimple_predictions.json')
         self.save_tusimple_predictions(predictions, pred_filename, runtimes)
         result, acc = LaneEval.bench_one_submit(pred_filename, self.cfg.test_json_file)
         self.logger.info(result)
         return acc
-
-    # Calculate accuracy (a classification metric)
-    def accuracy_fn(self, y_true, y_pred):
-        """Calculates accuracy between truth labels and predictions.
-        Args:
-            y_true (torch.Tensor): Truth labels for predictions.
-            y_pred (torch.Tensor): Predictions to be compared to predictions.
-        Returns:
-            [torch.float]: Accuracy value between y_true and y_pred, e.g. 78.45
-        """
-        correct = torch.eq(y_true, y_pred).sum().item()
-        acc = (correct / torch.numel(y_pred))
-        return acc
-
-    def evaluate_classification(self, predictions, ground_truth):
-        score = F.softmax(predictions, dim=2)
-        y_pred = score.argmax(dim=2)
-        return self.accuracy_fn(ground_truth, y_pred)

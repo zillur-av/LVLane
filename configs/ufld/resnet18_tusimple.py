@@ -38,7 +38,7 @@ optimizer = dict(
 )
 #optimizer = dict(type='Adam', lr= 0.025, weight_decay = 0.0001)  # 3e-4 for batchsize 8
 
-epochs = 30
+epochs = 1
 batch_size = 4
 total_iter = (3216 // batch_size + 1) * epochs 
 
@@ -105,7 +105,7 @@ dataset = dict(
     test=dict(
         type=dataset_type,
         data_root=dataset_path,
-        split='test',
+        split='val',
         processes=val_process,
     )
 )
@@ -113,7 +113,7 @@ dataset = dict(
 
 workers = 8
 ignore_label = 255
-log_interval = 100
+log_interval = 200
 eval_ep = 1
 save_ep = epochs
 row_anchor='tusimple_row_anchor'

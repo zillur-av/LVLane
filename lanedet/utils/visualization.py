@@ -5,9 +5,9 @@ import os.path as osp
 # Color palette for lane visualization
 def getcolor(code):
     if code == 1:
-        return (0, 255, 0)
-    if code == 2:
         return (0, 255, 255)
+    if code == 2:
+        return (255, 255, 200)
     if code == 3:
         return (255, 255, 0)
     if code == 4:

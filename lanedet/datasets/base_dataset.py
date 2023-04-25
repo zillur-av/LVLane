@@ -59,13 +59,13 @@ class BaseDataset(Dataset):
 
         sample = self.processes(sample)
         meta = {'full_img_path': data_info['img_path'],
-                'img_name': data_info['img_name'],
-                'category': data_info['categories']}
+                'img_name': data_info['img_name']}
         meta = DC(meta, cpu_only=True)
         sample.update({'meta': meta})   #generate one dict with img, img_path, lane pixels, seg_img
 
-        category = data_info['categories']
-        category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
-        sample['category'] = torch.LongTensor(category)
+        #category = data_info['categories']
+        #category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
+        #sample['category'] = torch.LongTensor(category)
+        #print(sample.keys())
 
         return sample
