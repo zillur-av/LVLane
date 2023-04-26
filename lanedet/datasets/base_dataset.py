@@ -63,9 +63,9 @@ class BaseDataset(Dataset):
         meta = DC(meta, cpu_only=True)
         sample.update({'meta': meta})   #generate one dict with img, img_path, lane pixels, seg_img
 
-        #category = data_info['categories']
+        category = data_info['categories']
         #category = [0 if np.all(sample['cls_label'][:,i].numpy() == 100) else category[i] for i in range(6)]
-        #sample['category'] = torch.LongTensor(category)
+        sample['category'] = torch.LongTensor(category)
         #print(sample.keys())
 
         return sample

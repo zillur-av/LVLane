@@ -38,8 +38,10 @@ class Runner(object):
         if self.cfg.optimizer.type == 'SGD':
             self.warmup_scheduler = warmup.LinearWarmup(
                 self.optimizer, warmup_period=5000)
-        self.metric = 0.
+        self.detection_metric = 0.
+        self.classification_metric = 0.
         self.val_loader = None
+        self.test_loader = None
 
     def resume(self):
         if not self.cfg.load_from and not self.cfg.finetune_from:
@@ -105,23 +107,71 @@ class Runner(object):
         if not self.val_loader:
             self.val_loader = build_dataloader(self.cfg.dataset.val, self.cfg, is_train=False)
         self.net.eval()
-        predictions = []
+        detection_predictions = []
+        classification_acc = 0
         for i, data in enumerate(tqdm(self.val_loader, desc=f'Validate')):
             data = self.to_cuda(data)
             with torch.no_grad():
                 output = self.net(data)
-                output = self.net.module.get_lanes(output)
-                predictions.extend(output)
+                detection_output = self.net.module.get_lanes(output)['lane_output']
+                detection_predictions.extend(detection_output)
+                if self.cfg.classification:
+                    classification_acc += self.val_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+ 
             if self.cfg.view:
-                self.val_loader.dataset.view(output, data['meta'])
+                self.val_loader.dataset.view(detection_output, data['meta'])
 
-        out = self.val_loader.dataset.evaluate(predictions, self.cfg.work_dir)
-        self.recorder.logger.info(out)
-        metric = out
-        if metric > self.metric:
-            self.metric = metric
+        detection_out = self.val_loader.dataset.evaluate_detection(detection_predictions, self.cfg.work_dir)
+        detection_metric = detection_out
+        if detection_metric > self.detection_metric:
+            self.detection_metric = detection_metric
             self.save_ckpt(is_best=True)
-        self.recorder.logger.info('Best metric: ' + str(self.metric))
+
+        if self.cfg.classification:
+            classification_acc /= len(self.val_loader)
+            self.recorder.logger.info("Detection: " +str(detection_out) + "  "+ "classification accuracy: " + str(classification_acc))      
+            classification_metric = classification_acc
+            if classification_metric > self.classification_metric:
+                self.classification_metric = classification_metric
+                #self.save_ckpt(is_best=True)
+            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric) + "  " + 'Best classification metric: ' + str(self.classification_metric))
+        else:
+            self.recorder.logger.info("Detection: " +str(detection_out))  
+            self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric))
+
+    def test(self):
+        if not self.test_loader:
+            self.test_loader = build_dataloader(self.cfg.dataset.test, self.cfg, is_train=False)
+        self.recorder.logger.info('Start testing...')
+        classification_acc = 0
+        y_true = []
+        y_pred = []
+        self.net.eval()
+        detection_predictions = []
+        for i, data in enumerate(tqdm(self.test_loader, desc=f'test')):
+            data = self.to_cuda(data)
+            with torch.no_grad():
+                output = self.net(data)
+                detection_output = self.net.module.get_lanes(output)['lane_output']
+                detection_predictions.extend(detection_output)
+
+                if self.cfg.classification:
+                    y_true.extend((data['category'].cpu().numpy()).flatten('C').tolist())
+                    score = F.softmax(output['category'].cuda(), dim=2)
+                    score = score.argmax(dim=2)
+                    y_pred.extend((score.cpu().numpy()).flatten('C').tolist())
+
+                    classification_acc += self.test_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+        
+        detection_out = self.test_loader.dataset.evaluate_detection(detection_predictions, self.cfg.work_dir)
+
+        if self.cfg.classification:
+            classification_acc /= len(self.test_loader)
+            self.recorder.logger.info("Detection: " +str(detection_out) + "  "+ "classification accuracy: " + str(classification_acc))  
+            self.test_loader.dataset.plot_confusion_matrix(y_true, y_pred)
+        else:
+            self.recorder.logger.info("Detection: " +str(detection_out))   
+
 
     def save_ckpt(self, is_best=False):
         save_model(self.net, self.optimizer, self.scheduler,

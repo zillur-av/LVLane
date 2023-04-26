@@ -99,7 +99,7 @@ class BUSD(nn.Module):
         super().__init__()
         img_height = cfg.img_height
         img_width = cfg.img_width
-        num_classes = cfg.num_classes
+        num_lanes = cfg.num_lanes
 
         self.layers = nn.ModuleList()
 
@@ -110,7 +110,7 @@ class BUSD(nn.Module):
         self.layers.append(UpsamplerBlock(ninput=32, noutput=16,
                                           up_height=int(img_height)//1, up_width=int(img_width)//1))
 
-        self.output_conv = conv1x1(16, num_classes)
+        self.output_conv = conv1x1(16, num_lanes)
 
     def forward(self, input):
         output = input

@@ -11,6 +11,9 @@ backbone = dict(
 )
 featuremap_out_channel = 128
 featuremap_out_stride = 8
+num_classes = 3
+num_lanes = 6 + 1
+classification = True
 
 aggregator = dict(
     type='RESA',
@@ -26,6 +29,7 @@ heads = dict(
     decoder=dict(type='BUSD'),
     thr=0.6,
     sample_y=sample_y,
+    cat_dim = (num_lanes - 1, num_classes)
 )
 
 optimizer = dict(
@@ -36,7 +40,7 @@ optimizer = dict(
 )
 
 
-epochs = 5
+epochs = 15
 batch_size = 4
 total_iter = (3216 // batch_size + 1) * epochs 
 import math
@@ -69,6 +73,12 @@ train_process = [
 val_process = [
     dict(type='Resize', size=(img_width, img_height)),
     dict(type='Normalize', img_norm=img_norm),
+    dict(type='ToTensor'),
+] 
+
+infer_process = [
+    dict(type='Resize', size=(img_width, img_height)),
+    dict(type='Normalize', img_norm=img_norm),
     dict(type='ToTensor', keys=['img']),
 ] 
 
@@ -83,7 +93,7 @@ dataset = dict(
     val=dict(
         type='TuSimple',
         data_root=dataset_path,
-        split='test',
+        split='val',
         processes=val_process,
     ),
     test=dict(
@@ -95,12 +105,11 @@ dataset = dict(
 )
 
 
-batch_size = 8 
 workers = 8
-num_classes = 6 + 1
 ignore_label = 255
-log_interval = 100
+log_interval = 200
 eval_ep = 1
 save_ep = epochs
-test_json_file='data/tusimple/label_data_0601.json'
+#test_json_file='data/tusimple/label_data_0531_small.json'
+test_json_file='data/tusimple/label_data_0531.json'
 lr_update_by_epoch = False
