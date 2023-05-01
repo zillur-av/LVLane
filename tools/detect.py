@@ -37,7 +37,7 @@ class Detect(object):
     def inference(self, data):
         with torch.no_grad():
             data = self.net(data)
-            lane_detection, lane_indx = self.net.module.get_lanes(data)
+            lane_detection, lane_indx = list(self.net.module.get_lanes(data).values())
             if self.cfg.classification:
                 lane_classes = self.get_lane_class(data, lane_indx)
                 return lane_detection[0], lane_classes
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('config', help='The path of config file')
     parser.add_argument('--img',  help='The path of the img (img file or img_folder), for example: data/*.png')
     parser.add_argument('--show', action='store_true', default=False, help='Whether to show the image')
-    parser.add_argument('--savedir', type=str, default=None, help='The root of save directory')
+    parser.add_argument('--savedir', type=str, default='./', help='The root of save directory')
     parser.add_argument('--load_from', type=str, default='best.pth', help='The path of model')
     args = parser.parse_args()
     process(args)
