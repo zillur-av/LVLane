@@ -16,7 +16,7 @@ num_lanes = 6
 
 
 classification = True
-num_classes = 8
+num_classes = 3
 
 heads = dict(type='LaneCls',
         dim = (griding_num + 1, 56, num_lanes),
@@ -38,7 +38,7 @@ optimizer = dict(
 )
 #optimizer = dict(type='Adam', lr= 0.025, weight_decay = 0.0001)  # 3e-4 for batchsize 8
 
-epochs = 1
+epochs = 15
 batch_size = 4
 total_iter = (3216 // batch_size + 1) * epochs 
 
@@ -117,5 +117,6 @@ log_interval = 200
 eval_ep = 1
 save_ep = epochs
 row_anchor='tusimple_row_anchor'
-test_json_file='data/tusimple/label_data_0601.json'
+test_json_file='data/tusimple/label_data_0531.json'
+#test_json_file='data/tusimple/label_data_0601_small.json'
 lr_update_by_epoch = False

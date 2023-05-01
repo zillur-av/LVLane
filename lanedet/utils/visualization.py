@@ -33,13 +33,13 @@ def imshow_lanes(img, lanes, show=False, out_file=None, lane_classes = None):
             cv2.circle(img, (x, y), 4, color, 2)
 
     if lane_classes is not None:
-        cv2.putText(img,'solid-yellow',(0,40), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(1),2,cv2.LINE_AA)
-        cv2.putText(img,'solid-white',(0,70), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(2),2,cv2.LINE_AA)
-        cv2.putText(img,'dashed',(0,100), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(3),2,cv2.LINE_AA)
-        cv2.putText(img,'double-dashed',(0,130), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(4),2,cv2.LINE_AA)
-        cv2.putText(img,'Botts\'-dots',(0,170), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(5),2,cv2.LINE_AA)
-        cv2.putText(img,'double-solid-yellow',(0,200), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(6),2,cv2.LINE_AA)
-        cv2.putText(img,'unknown',(0,230), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(7),2,cv2.LINE_AA)
+        cv2.putText(img,'solid',(0,40), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(1),2,cv2.LINE_AA)
+        cv2.putText(img,'dashed',(0,70), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(2),2,cv2.LINE_AA)
+        #cv2.putText(img,'dashed',(0,100), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(3),2,cv2.LINE_AA)
+        #cv2.putText(img,'double-dashed',(0,130), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(4),2,cv2.LINE_AA)
+        #cv2.putText(img,'Botts\'-dots',(0,170), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(5),2,cv2.LINE_AA)
+        #cv2.putText(img,'double-solid-yellow',(0,200), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(6),2,cv2.LINE_AA)
+        #cv2.putText(img,'unknown',(0,230), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(7),2,cv2.LINE_AA)
 
     if show:
         cv2.imshow('view', img)

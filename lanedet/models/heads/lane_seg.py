@@ -123,7 +123,7 @@ class LaneSeg(nn.Module):
             targets = batch['category'].reshape(self.cfg.batch_size*(self.cfg.num_lanes - 1))
 
             cat_loss = loss_fn(classification_output, targets)
-            loss += cat_loss
+            loss += cat_loss*0.7
             loss_stats.update({'cls_loss': cat_loss})
 
         if 'exist' in output:
@@ -145,10 +145,14 @@ class LaneSeg(nn.Module):
         
         if self.cfg.classification:
             x= output['seg'][:,1:, ...]
+            print(x.shape)
             x = self.maxpool(x)
+            print(x.shape)
             x = self.conv1(x)
+            print(x.shape)
             x = self.bn1(x)
             x = self.relu(x).view(-1, 353280)
+            print(x.shape)
             category = self.category(x).view(-1, *self.cat_dim)
             output.update({'category': category})
 

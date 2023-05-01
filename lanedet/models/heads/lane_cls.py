@@ -74,7 +74,7 @@ class LaneCls(nn.Module):
             cat_loss = loss_fn(classification_output, targets)
 
             loss_stats.update({'det_loss': det_loss, 'cls_loss': cat_loss})
-            total_loss = det_loss + cat_loss
+            total_loss = det_loss + cat_loss*0.7
         else:
             loss_stats.update({'det_loss': det_loss})
             total_loss = det_loss
@@ -85,7 +85,9 @@ class LaneCls(nn.Module):
     
     def get_lanes(self, pred):
         predictions = self.postprocess(pred['det']) 
-        ret = []
+        ret = {}
+        lane_output = []
+        lane_indexes = []
         griding_num = self.cfg.griding_num
         sample_y = list(self.cfg.sample_y)
         for out in predictions:
@@ -106,15 +108,16 @@ class LaneCls(nn.Module):
                 coord[:, 0] /= self.cfg.ori_img_w
                 coord[:, 1] /= self.cfg.ori_img_h
                 lanes.append(Lane(coord))
-            ret.append(lanes)
-        return ret, lane_indx
+            lane_indexes.append(lane_indx)
+            lane_output.append(lanes)
+        ret.update({'lane_output': lane_output, 'lane indexes': lane_indexes})
+        return ret
 
     def forward(self, x, **kwargs):
         x = x[-1]
         #print(x.shape)
 
         x = self.pool(x).view(-1, 1800)   # shape will be batch size x 1800 though
-        print(x.shape)
         det = self.det(x).view(-1, *self.dim)
         if self.cfg.classification:
             category = self.category(x).view(-1, *self.cat_dim)
