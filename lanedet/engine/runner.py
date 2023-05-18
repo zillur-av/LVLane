@@ -15,7 +15,6 @@ from lanedet.utils.recorder import build_recorder
 from lanedet.utils.net_utils import save_model, load_network
 from mmcv.parallel import MMDataParallel 
 import torch.nn.functional as F
-from torch.cuda.amp import autocast, GradScaler
 
 class Runner(object):
     def __init__(self, cfg):
@@ -43,7 +42,6 @@ class Runner(object):
         self.classification_metric = 0.
         self.val_loader = None
         self.test_loader = None
-        self.scaler = GradScaler(enabled=True)
 
     def resume(self):
         if not self.cfg.load_from and not self.cfg.finetune_from:
@@ -70,19 +68,10 @@ class Runner(object):
             data = self.to_cuda(data)
             self.optimizer.zero_grad()
             
-            if self.cfg.autocast:
-                with autocast(enabled=True):
-                    output = self.net(data)
-                    loss = output['loss']
-            
-                self.scaler.scale(loss).backward()
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-            else:
-                output = self.net(data)
-                loss = output['loss']          
-                loss.backward()
-                self.optimizer.step()
+            output = self.net(data)
+            loss = output['loss']          
+            loss.backward()
+            self.optimizer.step()
                 
             if not self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
@@ -166,10 +155,9 @@ class Runner(object):
         for i, data in enumerate(tqdm(self.test_loader, desc=f'test')):
             data = self.to_cuda(data)
             with torch.no_grad():
-                with autocast(enabled=self.cfg.autocast):
-                    output = self.net(data)
-                    detection_output = self.net.module.get_lanes(output)['lane_output']
-                    detection_predictions.extend(detection_output)
+                output = self.net(data)
+                detection_output = self.net.module.get_lanes(output)['lane_output']
+                detection_predictions.extend(detection_output)
 
                 if self.cfg.classification:
                     y_true.extend((data['category'].cpu().numpy()).flatten('C').tolist())

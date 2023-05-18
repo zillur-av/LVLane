@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 SPLIT_FILES = {
-    'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json'],
+    'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json', 'LVLane_train_sunny.json'],
     'val': ['test_label.json'],
     'test': ['test_label.json']
 }
@@ -119,7 +119,7 @@ class TuSimple(BaseDataset):
     def plot_confusion_matrix(self, y_true, y_pred):
 
         cf_matrix = confusion_matrix(y_true, y_pred)
-        class_names = ('background','solid-yellow', 'solid-white', 'dashed','botts\'-dots', 'unknown')
+        class_names = ('background','solid-yellow', 'solid-white', 'dashed','botts\'-dots', 'double-solid-yellow','unknown')
         #class_names = ('background', 'solid', 'dashed')
         # Create pandas dataframe
         dataframe = pd.DataFrame(cf_matrix, index=class_names, columns=class_names)
