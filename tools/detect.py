@@ -13,6 +13,7 @@ from lanedet.utils.net_utils import load_network
 from pathlib import Path
 from tqdm import tqdm
 import torch.nn.functional as F
+from torch.cuda.amp import autocast, GradScaler
 
 class Detect(object):
     def __init__(self, cfg):
@@ -36,8 +37,9 @@ class Detect(object):
 
     def inference(self, data):
         with torch.no_grad():
-            data = self.net(data)
-            lane_detection, lane_indx = self.net.module.get_lanes(data)
+            with autocast(enabled=self.cfg.autocast):
+                data = self.net(data)
+                lane_detection, lane_indx = self.net.module.get_lanes(data)
             if self.cfg.classification:
                 lane_classes = self.get_lane_class(data, lane_indx)
                 return lane_detection[0], lane_classes

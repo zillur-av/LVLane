@@ -31,6 +31,8 @@ def main():
 
     if args.validate:
         runner.validate()
+    elif args.test:
+        runner.test()
     else:
         runner.train()
 
@@ -51,6 +53,10 @@ def parse_args():
         help='whether to view')
     parser.add_argument(
         '--validate',
+        action='store_true',
+        help='whether to evaluate the checkpoint during training')
+    parser.add_argument(
+        '--test',
         action='store_true',
         help='whether to evaluate the checkpoint during training')
     parser.add_argument('--gpus', nargs='+', type=int, default='0')

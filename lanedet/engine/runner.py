@@ -14,7 +14,8 @@ from lanedet.datasets import build_dataloader
 from lanedet.utils.recorder import build_recorder
 from lanedet.utils.net_utils import save_model, load_network
 from mmcv.parallel import MMDataParallel 
-
+import torch.nn.functional as F
+from torch.cuda.amp import autocast, GradScaler
 
 class Runner(object):
     def __init__(self, cfg):
@@ -42,6 +43,7 @@ class Runner(object):
         self.classification_metric = 0.
         self.val_loader = None
         self.test_loader = None
+        self.scaler = GradScaler(enabled=True)
 
     def resume(self):
         if not self.cfg.load_from and not self.cfg.finetune_from:
@@ -66,11 +68,22 @@ class Runner(object):
             date_time = time.time() - end
             self.recorder.step += 1
             data = self.to_cuda(data)
-            output = self.net(data)
             self.optimizer.zero_grad()
-            loss = output['loss']
-            loss.backward()
-            self.optimizer.step()
+            
+            if self.cfg.autocast:
+                with autocast(enabled=True):
+                    output = self.net(data)
+                    loss = output['loss']
+            
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                output = self.net(data)
+                loss = output['loss']          
+                loss.backward()
+                self.optimizer.step()
+                
             if not self.cfg.lr_update_by_epoch:
                 self.scheduler.step()
             if self.warmup_scheduler:
@@ -125,7 +138,6 @@ class Runner(object):
         detection_metric = detection_out
         if detection_metric > self.detection_metric:
             self.detection_metric = detection_metric
-            self.save_ckpt(is_best=True)
 
         if self.cfg.classification:
             classification_acc /= len(self.val_loader)
@@ -133,7 +145,7 @@ class Runner(object):
             classification_metric = classification_acc
             if classification_metric > self.classification_metric:
                 self.classification_metric = classification_metric
-                #self.save_ckpt(is_best=True)
+                self.save_ckpt(is_best=True)
             self.recorder.logger.info('Best detection metric: ' + str(self.detection_metric) + "  " + 'Best classification metric: ' + str(self.classification_metric))
         else:
             self.recorder.logger.info("Detection: " +str(detection_out))  
@@ -148,20 +160,28 @@ class Runner(object):
         y_pred = []
         self.net.eval()
         detection_predictions = []
+        start = torch.cuda.Event(enable_timing=True)
+        end = torch.cuda.Event(enable_timing=True)
+        start.record()
         for i, data in enumerate(tqdm(self.test_loader, desc=f'test')):
             data = self.to_cuda(data)
             with torch.no_grad():
-                output = self.net(data)
-                detection_output = self.net.module.get_lanes(output)['lane_output']
-                detection_predictions.extend(detection_output)
+                with autocast(enabled=self.cfg.autocast):
+                    output = self.net(data)
+                    detection_output = self.net.module.get_lanes(output)['lane_output']
+                    detection_predictions.extend(detection_output)
 
                 if self.cfg.classification:
                     y_true.extend((data['category'].cpu().numpy()).flatten('C').tolist())
-                    score = F.softmax(output['category'].cuda(), dim=2)
-                    score = score.argmax(dim=2)
+                    score = F.softmax(output['category'].cuda(), dim=1)
+                    score = score.argmax(dim=1)
                     y_pred.extend((score.cpu().numpy()).flatten('C').tolist())
 
                     classification_acc += self.test_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+        
+        end.record()
+        torch.cuda.synchronize()  
+        print('execution time in milliseconds per image: {}'. format(start.elapsed_time(end)/2782))
         
         detection_out = self.test_loader.dataset.evaluate_detection(detection_predictions, self.cfg.work_dir)
 
