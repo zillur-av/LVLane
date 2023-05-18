@@ -11,9 +11,10 @@ backbone = dict(
 )
 featuremap_out_channel = 128
 featuremap_out_stride = 8
-num_classes = 3
+num_classes = 7
 num_lanes = 6 + 1
 classification = True
+autocast = True
 
 aggregator = dict(
     type='RESA',
@@ -29,7 +30,7 @@ heads = dict(
     decoder=dict(type='BUSD'),
     thr=0.6,
     sample_y=sample_y,
-    cat_dim = (num_lanes - 1, num_classes)
+    cat_dim = (num_classes, num_lanes - 1)
 )
 
 optimizer = dict(
@@ -40,9 +41,10 @@ optimizer = dict(
 )
 
 
-epochs = 15
-batch_size = 4
-total_iter = (3216 // batch_size + 1) * epochs 
+epochs = 25
+batch_size = 16
+total_training_samples = 3626
+total_iter = (total_training_samples // batch_size + 1) * epochs 
 import math
 scheduler = dict(
     type = 'LambdaLR',
@@ -110,6 +112,5 @@ ignore_label = 255
 log_interval = 200
 eval_ep = 1
 save_ep = epochs
-#test_json_file='data/tusimple/label_data_0531_small.json'
-test_json_file='data/tusimple/label_data_0531.json'
+test_json_file='data/tusimple/test_label.json'
 lr_update_by_epoch = False

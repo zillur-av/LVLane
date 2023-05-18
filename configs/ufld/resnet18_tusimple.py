@@ -13,14 +13,13 @@ featuremap_out_channel = 512
 
 griding_num = 100
 num_lanes = 6
-
-
 classification = True
-num_classes = 3
+num_classes = 7
+autocast = True
 
 heads = dict(type='LaneCls',
         dim = (griding_num + 1, 56, num_lanes),
-        cat_dim =(num_lanes, num_classes))
+        cat_dim =(num_classes, num_lanes))
 
 trainer = dict(
     type='LaneCls'
@@ -38,9 +37,10 @@ optimizer = dict(
 )
 #optimizer = dict(type='Adam', lr= 0.025, weight_decay = 0.0001)  # 3e-4 for batchsize 8
 
-epochs = 15
-batch_size = 4
-total_iter = (3216 // batch_size + 1) * epochs 
+epochs = 40
+batch_size = 16
+total_training_samples = 3626
+total_iter = (total_training_samples // batch_size + 1) * epochs 
 
 import math
 
@@ -117,6 +117,5 @@ log_interval = 200
 eval_ep = 1
 save_ep = epochs
 row_anchor='tusimple_row_anchor'
-test_json_file='data/tusimple/label_data_0531.json'
-#test_json_file='data/tusimple/label_data_0601_small.json'
+test_json_file='data/tusimple/test_label.json'
 lr_update_by_epoch = False

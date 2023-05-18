@@ -30,15 +30,15 @@ class LaneSeg(nn.Module):
                 padding=1,
                 bias=False
             )
-            self.bn1 = torch.nn.BatchNorm2d(out_channels)
+            #self.bn1 = torch.nn.BatchNorm2d(out_channels)
             self.relu = torch.nn.ReLU(inplace=True)
 
             self.category = torch.nn.Sequential(
-                torch.nn.Dropout(p=0.2),
-                torch.nn.Linear(353280, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Dropout(p=0.3),
+                torch.nn.Linear(353280, 256),
+                torch.nn.BatchNorm1d(256),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 100),
+                torch.nn.Linear(256, 100),
                 torch.nn.ReLU(),
                 torch.nn.Linear(100, np.prod(self.cat_dim))
                ) 
@@ -119,11 +119,8 @@ class LaneSeg(nn.Module):
         
         if self.cfg.classification:       
             loss_fn = torch.nn.CrossEntropyLoss()
-            classification_output = output['category'].reshape(self.cfg.batch_size*(self.cfg.num_lanes - 1), self.cfg.num_classes)
-            targets = batch['category'].reshape(self.cfg.batch_size*(self.cfg.num_lanes - 1))
-
-            cat_loss = loss_fn(classification_output, targets)
-            loss += cat_loss*0.7
+            cat_loss = loss_fn(output['category'], batch['category'])
+            loss += cat_loss*0.6
             loss_stats.update({'cls_loss': cat_loss})
 
         if 'exist' in output:
@@ -145,14 +142,14 @@ class LaneSeg(nn.Module):
         
         if self.cfg.classification:
             x= output['seg'][:,1:, ...]
-            print(x.shape)
+            #print(x.shape)
             x = self.maxpool(x)
-            print(x.shape)
+            #print(x.shape)
             x = self.conv1(x)
-            print(x.shape)
-            x = self.bn1(x)
+            #print(x.shape)
+            #x = self.bn1(x)
             x = self.relu(x).view(-1, 353280)
-            print(x.shape)
+            #print(x.shape)
             category = self.category(x).view(-1, *self.cat_dim)
             output.update({'category': category})
 

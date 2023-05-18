@@ -28,10 +28,10 @@ class LaneCls(nn.Module):
 
         if self.cfg.classification:
             self.category = torch.nn.Sequential(
-                torch.nn.Linear(1800, 512),
-                torch.nn.BatchNorm1d(512),
+                torch.nn.Linear(1800, 256),
+                torch.nn.BatchNorm1d(256),
                 torch.nn.ReLU(),
-                torch.nn.Linear(512, 100),
+                torch.nn.Linear(256, 100),
                 torch.nn.ReLU(),
                 torch.nn.Linear(100, np.prod(self.cat_dim))
                )
@@ -65,16 +65,14 @@ class LaneCls(nn.Module):
         total_loss = 0
         loss_stats = {}
         det_loss = criterion(output['det'], batch['cls_label'])
+        classification_loss_weight = 0.7
 
         if self.cfg.classification:       
             loss_fn = torch.nn.CrossEntropyLoss()
-            classification_output = output['category'].reshape(self.cfg.batch_size*self.cfg.num_lanes, self.cfg.num_classes)
-            targets = batch['category'].reshape(self.cfg.batch_size*self.cfg.num_lanes)
-
-            cat_loss = loss_fn(classification_output, targets)
+            cat_loss = loss_fn(output['category'], batch['category'])
 
             loss_stats.update({'det_loss': det_loss, 'cls_loss': cat_loss})
-            total_loss = det_loss + cat_loss*0.7
+            total_loss = det_loss + cat_loss*classification_loss_weight
         else:
             loss_stats.update({'det_loss': det_loss})
             total_loss = det_loss
@@ -116,7 +114,6 @@ class LaneCls(nn.Module):
     def forward(self, x, **kwargs):
         x = x[-1]
         #print(x.shape)
-
         x = self.pool(x).view(-1, 1800)   # shape will be batch size x 1800 though
         det = self.det(x).view(-1, *self.dim)
         if self.cfg.classification:
