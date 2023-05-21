@@ -14,7 +14,7 @@ featuremap_out_channel = 512
 griding_num = 100
 num_lanes = 6
 classification = True
-num_classes = 7
+num_classes = 3
 autocast = True
 
 heads = dict(type='LaneCls',

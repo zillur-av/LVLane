@@ -35,7 +35,8 @@ class TuSimple(BaseDataset):
         self.logger.info('Loading TuSimple annotations...')
         self.data_infos = []
         max_lanes = 0
-        df = {0:0, 1:1, 2:2, 3:3, 4:3, 5:4, 6:5, 7:6}
+        #df = {0:0, 1:1, 2:2, 3:3, 4:3, 5:4, 6:5, 7:6}
+        df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:2, 6:1, 7:1}
         for anno_file in self.anno_files:
             anno_file = osp.join(self.data_root, anno_file)
             with open(anno_file, 'r') as anno_obj:
@@ -119,24 +120,24 @@ class TuSimple(BaseDataset):
     def plot_confusion_matrix(self, y_true, y_pred):
 
         cf_matrix = confusion_matrix(y_true, y_pred)
-        class_names = ('background','solid-yellow', 'solid-white', 'dashed','botts\'-dots', 'double-solid-yellow','unknown')
-        #class_names = ('background', 'solid', 'dashed')
+        #class_names = ('background','solid-yellow', 'solid-white', 'dashed','botts\'-dots', 'double-solid-yellow','unknown')
+        class_names = ('background', 'solid', 'dashed')
         # Create pandas dataframe
         dataframe = pd.DataFrame(cf_matrix, index=class_names, columns=class_names)
         total_number_of_instances = dataframe.sum(1)[1:].sum()
         
         
-        df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1, 6:1}
-        y_true = list(map(df.get,y_true))
-        y_pred = list(map(df.get,y_pred))
-        cf_matrix_2 = confusion_matrix(y_true, y_pred)
-        true_positives_2 = np.diag(cf_matrix_2)[1:].sum()
-        accuracy_2 = true_positives_2 / total_number_of_instances
-        print(f"Accuracy for 2 classes: {accuracy_2}")
+        #df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1, 6:1}
+        #y_true = list(map(df.get,y_true))
+        #y_pred = list(map(df.get,y_pred))
+        #cf_matrix_2 = confusion_matrix(y_true, y_pred)
+        #true_positives_2 = np.diag(cf_matrix_2)[1:].sum()
+        #accuracy_2 = true_positives_2 / total_number_of_instances
+        #print(f"Accuracy for 2 classes: {accuracy_2}")
 
         true_positives = np.diag(cf_matrix)[1:].sum()
         accuracy = true_positives / total_number_of_instances
-        print(f"Accuracy for 6 classes: {accuracy}")
+        print(f"Accuracy for 2 classes: {accuracy}")
 
         # compute metrices from confusion matrix
         FP = cf_matrix.sum(axis=0) - np.diag(cf_matrix)  

@@ -5,15 +5,15 @@ import os.path as osp
 # Color palette for lane visualization
 def getcolor(code):
     if code == 1:
-        return (0, 255, 255)
+        return (0, 255, 0)
     if code == 2:
-        return (255, 255, 200)
+        return (0, 0, 255)
     if code == 3:
         return (255, 255, 0)
     if code == 4:
-        return (255, 0, 0)
+        return (0, 255, 255)
     if code == 5:
-        return (0, 0, 255)
+        return (255, 0, 255)
     if code == 6:
         return (45, 88, 200)
     if code == 7:
@@ -21,6 +21,7 @@ def getcolor(code):
 
 
 def imshow_lanes(img, lanes, show=False, out_file=None, lane_classes = None, num_classes=2):
+    img = np.zeros((720, 1280, 3))
     
     if lane_classes is not None:
         if num_classes == 6:
