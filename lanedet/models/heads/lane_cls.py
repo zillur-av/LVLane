@@ -66,6 +66,7 @@ class LaneCls(nn.Module):
         loss_stats = {}
         det_loss = criterion(output['det'], batch['cls_label'])
         classification_loss_weight = 0.7
+        #print(batch['cls_label'].shape, batch['category'].shape)
 
         if self.cfg.classification:       
             loss_fn = torch.nn.CrossEntropyLoss()
@@ -118,6 +119,7 @@ class LaneCls(nn.Module):
         det = self.det(x).view(-1, *self.dim)
         if self.cfg.classification:
             category = self.category(x).view(-1, *self.cat_dim)
+            #print(category.shape)
             output = {'det': det, 'category': category}
         else:
             output = {'det': det}

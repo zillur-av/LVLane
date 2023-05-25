@@ -22,6 +22,8 @@ class Detect(object):
         #print(self.net)
         self.net = torch.nn.parallel.DataParallel(
                 self.net, device_ids = range(1)).cuda()
+        total_params = sum(param.numel() for param in self.net.parameters())
+        print(f"total number of params: {total_params}")
         self.net.eval()
         load_network(self.net, self.cfg.load_from)
 
@@ -40,19 +42,20 @@ class Detect(object):
             lane_detection, lane_indx = list(self.net.module.get_lanes(data).values())
             if self.cfg.classification:
                 lane_classes = self.get_lane_class(data, lane_indx)
+                #print(lane_classes)
                 return lane_detection[0], lane_classes
         return lane_detection
 
     def get_lane_class(self, predictions, lane_indx):
-        score = F.softmax(predictions['category'], dim=2)
-        y_pred = score.argmax(dim=2).squeeze()
+        score = F.softmax(predictions['category'], dim=1)
+        y_pred = score.argmax(dim=1).squeeze()
         return y_pred[lane_indx].detach().cpu().numpy()
 
     def show(self, data, lane_classes=None):
         out_file = self.cfg.savedir 
         if out_file:
             out_file = osp.join(out_file, osp.basename(data['img_path']))
-        lanes = [lane.to_array(self.cfg) for lane in data['lanes']]
+        lanes = [lane.to_array(self.cfg).astype(int) for lane in data['lanes']]
         #print(lanes)
         imshow_lanes(data['ori_img'], lanes, show=self.cfg.show, out_file=out_file, lane_classes=lane_classes)
 

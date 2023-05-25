@@ -11,7 +11,7 @@ backbone = dict(
 )
 featuremap_out_channel = 128
 featuremap_out_stride = 8
-num_classes = 7
+num_classes = 3
 num_lanes = 6 + 1
 classification = True
 autocast = True

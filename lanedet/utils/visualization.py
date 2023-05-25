@@ -1,6 +1,7 @@
 import cv2
 import os
 import os.path as osp
+import numpy as np
 
 # Color palette for lane visualization
 def getcolor(code):
@@ -34,8 +35,9 @@ def imshow_lanes(img, lanes, show=False, out_file=None, lane_classes = None, num
         else:
             cv2.putText(img,'solid',(0,40), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(1),2,cv2.LINE_AA)
             cv2.putText(img,'dashed',(0,70), cv2.FONT_HERSHEY_SIMPLEX, 1,getcolor(2),2,cv2.LINE_AA)
-            df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1, 6:1}
-            lane_classes = list(map(df.get,lane_classes))
+            #df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1, 6:1}
+            #lane_classes = list(map(df.get,lane_classes))
+
 
     for i, lane in enumerate(lanes):
         for x, y in lane:
@@ -47,6 +49,16 @@ def imshow_lanes(img, lanes, show=False, out_file=None, lane_classes = None, num
             else:
                 color = (255, 0, 0)
             cv2.circle(img, (x, y), 4, color, 2)
+    
+    '''
+    for i, lane in enumerate(lanes):
+        for j in range(len(lane)-1):
+            if lane_classes is not None:
+                color = getcolor(lane_classes[i])
+            else:
+                color = (255, 0, 0)
+            cv2.line(img, lane[j], lane[j+1], color, 5)
+    '''
 
     if show:
         cv2.imshow('view', img)

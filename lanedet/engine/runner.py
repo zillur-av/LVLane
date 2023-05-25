@@ -29,6 +29,8 @@ class Runner(object):
         #         self.net, device_ids = range(self.cfg.gpus)).cuda()
         self.net = MMDataParallel(
                 self.net, device_ids = range(self.cfg.gpus)).cuda()
+        total_params = sum(param.numel() for param in self.net.parameters())
+        print(f"total number of params: {total_params}")
         self.recorder.logger.info('Network: \n' + str(self.net))
         self.resume()
         self.optimizer = build_optimizer(self.cfg, self.net)
@@ -64,6 +66,8 @@ class Runner(object):
             if self.recorder.step >= self.cfg.total_iter:
                 break
             date_time = time.time() - end
+            #print(data['img'].shape, data['cls_label'].shape)
+
             self.recorder.step += 1
             data = self.to_cuda(data)
             self.optimizer.zero_grad()
