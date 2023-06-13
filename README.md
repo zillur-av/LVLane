@@ -1,6 +1,6 @@
 # LaneDet
 ## Introduction
-LaneDet is an open source lane detection toolbox based on PyTorch that aims to pull together a wide variety of state-of-the-art lane detection models. Developers can reproduce these SOTA methods and build their own methods.
+This repository is the official implementation of the paper "LVLane: Lane Detection and Classification in Challenging Conditions", accpeted in XYZ conference.
 
 ![demo image](.github/_clips_0601_1494452613491980502_20.jpg)
 
@@ -19,15 +19,10 @@ Supported backbones:
 - [x] ERFNet
 - [x] VGG
 - [x] MobileNet
-- [] DLA(coming soon)
 
 Supported detectors:
-- [x] [SCNN](configs/scnn)
 - [x] [UFLD](configs/ufld)
 - [x] [RESA](configs/resa)
-- [x] [LaneATT](configs/laneatt)
-- [x] [CondLane](configs/condlane)
-- [] CLRNet(coming soon)
 
 
 ## Installation
@@ -37,7 +32,7 @@ Please refer to [INSTALL.md](INSTALL.md) for installation.
 
 ### Clone this repository
 ```
-git clone https://github.com/turoad/lanedet.git
+git clone https://github.com/zillur-av/LVLane.git
 ```
 We call this directory as `$LANEDET_ROOT`
 
@@ -64,23 +59,6 @@ python setup.py build develop
 
 ### Data preparation
 
-#### CULane
-
-Download [CULane](https://xingangpan.github.io/projects/CULane.html). Then extract them to `$CULANEROOT`. Create link to `data` directory.
-
-```Shell
-cd $LANEDET_ROOT
-mkdir -p data
-ln -s $CULANEROOT data/CULane
-```
-
-For CULane, you should have structure like this:
-```
-$CULANEROOT/driver_xx_xxframe    # data folders x6
-$CULANEROOT/laneseg_label_w16    # lane segmentation labels
-$CULANEROOT/list                 # data lists
-```
-
 #### Tusimple
 Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$TUSIMPLEROOT`. Create link to `data` directory.
 
@@ -94,12 +72,14 @@ For Tusimple, you should have structure like this:
 ```
 $TUSIMPLEROOT/clips # data folders
 $TUSIMPLEROOT/lable_data_xxxx.json # label json file x4
-$TUSIMPLEROOT/test_tasks_0627.json # test tasks json file
 $TUSIMPLEROOT/test_label.json # test label json file
 
 ```
+### LVLane
+Download [LVLane](). Then extract them to `$TUSIMPLEROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset too, replace the orginal ones with these.
 
-For Tusimple, the segmentation annotation is not provided, hence we need to generate segmentation from the json annotation. 
+
+We need to generate segmentation from the json annotation. 
 
 ```Shell
 python tools/generate_seg_tusimple.py --root $TUSIMPLEROOT
@@ -177,14 +157,10 @@ This project is released under the [Apache 2.0 license](LICNESE).
 
 ## Acknowledgement
 <!--ts-->
-* [open-mmlab/mmdetection](https://github.com/open-mmlab/mmdetection)
+* [Turoad/lanedet](https://github.com/Turoad/lanedet)
 * [pytorch/vision](https://github.com/pytorch/vision)
-* [cardwing/Codes-for-Lane-Detection](https://github.com/cardwing/Codes-for-Lane-Detection)
-* [XingangPan/SCNN](https://github.com/XingangPan/SCNN)
 * [ZJULearning/resa](https://github.com/ZJULearning/resa)
 * [cfzd/Ultra-Fast-Lane-Detection](https://github.com/cfzd/Ultra-Fast-Lane-Detection)
-* [lucastabelini/LaneATT](https://github.com/lucastabelini/LaneATT)
-* [aliyun/conditional-lane-detection](https://github.com/aliyun/conditional-lane-detection)
 <!--te-->
 
 <!-- 
