@@ -1,8 +1,8 @@
-# LaneDet
+# LVLane
 ## Introduction
 This repository is the official implementation of the paper "LVLane: Lane Detection and Classification in Challenging Conditions", accpeted in XYZ conference.
 
-![demo image](.github/_clips_0601_1494452613491980502_20.jpg)
+![demo image](.github/test-class-lvlane-ufld2.jpg)
 
 ## Table of Contents
 * [Introduction](#Introduction)
@@ -26,6 +26,7 @@ Supported detectors:
 
 
 ## Installation
+This repository is a modified version of [lanedet](github.com/Turoad/lanedet.git); so, it you installed that, no need to install this one.
 <!--
 Please refer to [INSTALL.md](INSTALL.md) for installation.
 -->
@@ -57,9 +58,9 @@ pip install torch==1.8.0 torchvision==0.9.0
 python setup.py build develop
 ```
 
-### Data preparation
+## Data preparation
 
-#### Tusimple
+### Tusimple
 Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$TUSIMPLEROOT`. Create link to `data` directory.
 
 ```Shell
