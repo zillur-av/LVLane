@@ -26,7 +26,7 @@ Supported detectors:
 
 
 ## Installation
-This repository is a modified version of [lanedet](github.com/Turoad/lanedet.git); so, it you installed that, no need to install this one.
+This repository is a modified version of [lanedet](https://github.com/Turoad/lanedet.git); so, it you installed that, no need to install this one. Just clone this and use the same conda environment.
 <!--
 Please refer to [INSTALL.md](INSTALL.md) for installation.
 -->
@@ -61,33 +61,45 @@ python setup.py build develop
 ## Data preparation
 
 ### Tusimple
-Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$TUSIMPLEROOT`. Create link to `data` directory.
+Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$DATASETROOT`. Create link to `data` directory.
 
 ```Shell
 cd $LANEDET_ROOT
 mkdir -p data
-ln -s $TUSIMPLEROOT data/tusimple
+ln -s $DATASETROOT data/tusimple
 ```
 
 For Tusimple, you should have structure like this:
 ```
-$TUSIMPLEROOT/clips # data folders
-$TUSIMPLEROOT/lable_data_xxxx.json # label json file x4
-$TUSIMPLEROOT/test_label.json # test label json file
+$DATASETROOT/clips # data folders
+$DATASETROOT/lable_data_xxxx.json # label json file
+$DATASETROOT/test_label.json # test label json file
 
 ```
 ### LVLane
-Download [LVLane](). Then extract them to `$TUSIMPLEROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset too, replace the orginal ones with these.
+Download [LVLane](). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset too, so replace the orginal labels ones with the new ones.
 
+```
+$DATASETROOT/clips/0531/
+.
+.
+$DATASETROOT/clips/LVLane_train/
+$DATASETROOT/lable_data_xxxx.json
+$DATASETROOT/test_label.json 
+$DATASETROOT/LVLane_test.json
+$DATASETROOT/LVLane_train.json
+
+```
 
 We need to generate segmentation from the json annotation. 
 
 ```Shell
-python tools/generate_seg_tusimple.py --root $TUSIMPLEROOT
+python tools/generate_seg_tusimple.py --root $DATASETROOT
 # this will generate seg_label directory
 ```
 
 ## Getting Started
+If we want just detection, no lane classification, switch to `detection` branch by running `git checkout detection`.
 ### Training
 
 For training, run
@@ -150,7 +162,7 @@ python tools/detect.py configs/resa/resa34_culane.py --img images\
 
 
 ## Contributing
-We appreciate all contributions to improve LaneDet.  Any pull requests or issues are welcomed.
+We appreciate all contributions to improve LVLane.  Any pull requests or issues are welcomed.
 
 ## Licenses
 This project is released under the [Apache 2.0 license](LICNESE).
