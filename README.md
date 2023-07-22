@@ -77,7 +77,7 @@ $DATASETROOT/test_label.json # test label json file
 
 ```
 ### LVLane
-Download [LVLane](https://drive.google.com/file/d/1lRhne-d87A4b0gLjf6quipDQ4MYvP7ky/view?usp=sharing). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset, so replace the orginal labels ones with the new ones. Lane annotations and class labels of Caltech dataset are also available in TuSimple format. Download the dataset from original site and resize them to 1280x720 to use with this model.
+Download [LVLaneV1](https://drive.google.com/file/d/1lRhne-d87A4b0gLjf6quipDQ4MYvP7ky/view?usp=sharing). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset, so replace the orginal labels ones with the new ones. Lane annotations and class labels of Caltech dataset are also available in TuSimple format. Download the dataset from original site and resize them to 1280x720 to use with this model.
 
 ```
 $DATASETROOT/clips/0531/
@@ -90,13 +90,14 @@ $DATASETROOT/LVLane_test_sunny.json
 $DATASETROOT/LVLane_train_sunny.json
 
 ```
-
+If you want to create a dataset in tusimple format, please follow instructions on [tusimple-annotation](https://github.com/zillur-av/tusimple-annotation)
 We need to generate segmentation from the json annotation. 
-
+### Generate masks
 ```Shell
-python tools/generate_seg_tusimple.py --root $DATASETROOT
+python tools/generate_seg_tusimple.py --root $DATASETROOT --filename 'LVLane_test_sunny'
 # this will generate seg_label directory
 ```
+Then you will find new `json` annotations files that have both lane location and class id in `$DATASETROOT/seg_label/list/`. Replace the old annotation files in `$DATASETROOT` by these new files.
 
 ## Getting Started
 If we want just detection, no lane classification, switch to `detection` branch by running `git checkout detection`.
@@ -111,7 +112,7 @@ python main.py [configs/path_to_your_config] --gpus [gpu_ids]
 
 For example, run
 ```Shell
-python main.py configs/resa/resa50_culane.py --gpus 0
+python main.py configs/ufld/resnet18_tusimple.py --gpus 0
 ```
 
 ### Testing
@@ -122,7 +123,7 @@ python main.py [configs/path_to_your_config] --validate --load_from [path_to_you
 
 For example, run
 ```Shell
-python main.py configs/resa/resa50_culane.py --validate --load_from culane_resnet50.pth --gpus 0
+python main.py configs/ufld/resnet18_tusimple.py --validate --load_from ufld_tusimple.pth --gpus 0
 ```
 
 Currently, this code can output the visualization result when testing, just add `--view`.
@@ -130,7 +131,7 @@ We will get the visualization result in `work_dirs/xxx/xxx/visualization`.
 
 For example, run
 ```Shell
-python main.py configs/resa/resa50_culane.py --validate --load_from culane_resnet50.pth --gpus 0 --view
+python main.py configs/ufld/resnet18_tusimple.py --validate --load_from ufld_tusimple.pth --gpus 0 --view
 ```
 
 ### Inference
@@ -156,8 +157,8 @@ optional arguments:
 ```
 To run inference on example images in `./images` and save the visualization images in `vis` folder:
 ```
-python tools/detect.py configs/resa/resa34_culane.py --img images\
-          --load_from resa_r34_culane.pth --savedir ./vis
+python tools/detect.py configs/ufld/resnet18_tusimple.py --img images\
+          --load_from ufld_tusimple.pth --savedir ./vis
 ```
 
 

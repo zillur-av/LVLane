@@ -99,13 +99,14 @@ def generate_label(args):
     os.makedirs(save_dir, exist_ok=True)
 
     print("generating masks...")
-    gen_label_from_json(args.root, save_dir, file_name = 'LVLane_test_sunny')
+    gen_label_from_json(args.root, save_dir, file_name = args.filename)
     
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', required=True, help='The root of the Tusimple dataset')
     parser.add_argument('--savedir', type=str, default='seg_label', help='The root of the Tusimple dataset')
+    parser.add_argument('--filename', type=str, default='LVLane_test_sunny', help= 'Name of the json file')
     args = parser.parse_args()
 
     generate_label(args)
