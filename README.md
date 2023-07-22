@@ -1,8 +1,8 @@
-# LaneDet
+# LVLane
 ## Introduction
-LaneDet is an open source lane detection toolbox based on PyTorch that aims to pull together a wide variety of state-of-the-art lane detection models. Developers can reproduce these SOTA methods and build their own methods.
+This repository is the official implementation of the paper "[LVLane: Lane Detection and Classification in Challenging Conditions](https://arxiv.org/abs/2307.06853)", accpeted in 2023 IEEE International Conference on Intelligent Trabsportation Systems (ITSC).
 
-![demo image](.github/_clips_0601_1494452613491980502_20.jpg)
+![demo image](.github/test-class-lvlane-ufld2.jpg)
 
 ## Table of Contents
 * [Introduction](#Introduction)
@@ -19,25 +19,21 @@ Supported backbones:
 - [x] ERFNet
 - [x] VGG
 - [x] MobileNet
-- [] DLA(coming soon)
 
 Supported detectors:
-- [x] [SCNN](configs/scnn)
 - [x] [UFLD](configs/ufld)
 - [x] [RESA](configs/resa)
-- [x] [LaneATT](configs/laneatt)
-- [x] [CondLane](configs/condlane)
-- [] CLRNet(coming soon)
 
 
 ## Installation
+This repository is a modified version of [lanedet](https://github.com/Turoad/lanedet.git); so, it you installed that, no need to install this one. Just clone this and use the same conda environment.
 <!--
 Please refer to [INSTALL.md](INSTALL.md) for installation.
 -->
 
 ### Clone this repository
 ```
-git clone https://github.com/turoad/lanedet.git
+git clone https://github.com/zillur-av/LVLane.git
 ```
 We call this directory as `$LANEDET_ROOT`
 
@@ -62,51 +58,48 @@ pip install torch==1.8.0 torchvision==0.9.0
 python setup.py build develop
 ```
 
-### Data preparation
+## Data preparation
 
-#### CULane
-
-Download [CULane](https://xingangpan.github.io/projects/CULane.html). Then extract them to `$CULANEROOT`. Create link to `data` directory.
-
-```Shell
-cd $LANEDET_ROOT
-mkdir -p data
-ln -s $CULANEROOT data/CULane
-```
-
-For CULane, you should have structure like this:
-```
-$CULANEROOT/driver_xx_xxframe    # data folders x6
-$CULANEROOT/laneseg_label_w16    # lane segmentation labels
-$CULANEROOT/list                 # data lists
-```
-
-#### Tusimple
-Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$TUSIMPLEROOT`. Create link to `data` directory.
+### Tusimple
+Download [Tusimple](https://github.com/TuSimple/tusimple-benchmark/issues/3). Then extract them to `$DATASETROOT`. Create link to `data` directory.
 
 ```Shell
 cd $LANEDET_ROOT
 mkdir -p data
-ln -s $TUSIMPLEROOT data/tusimple
+ln -s $DATASETROOT data/tusimple
 ```
 
 For Tusimple, you should have structure like this:
 ```
-$TUSIMPLEROOT/clips # data folders
-$TUSIMPLEROOT/lable_data_xxxx.json # label json file x4
-$TUSIMPLEROOT/test_tasks_0627.json # test tasks json file
-$TUSIMPLEROOT/test_label.json # test label json file
+$DATASETROOT/clips # data folders
+$DATASETROOT/lable_data_xxxx.json # label json file
+$DATASETROOT/test_label.json # test label json file
+
+```
+### LVLane
+Download [LVLane](https://drive.google.com/file/d/1lRhne-d87A4b0gLjf6quipDQ4MYvP7ky/view?usp=sharing). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset, so replace the orginal labels ones with the new ones. Lane annotations and class labels of Caltech dataset are also available in TuSimple format. Download the dataset from original site and resize them to 1280x720 to use with this model.
+
+```
+$DATASETROOT/clips/0531/
+.
+.
+$DATASETROOT/clips/LVLane_train_sunny/
+$DATASETROOT/label_data_xxxx.json
+$DATASETROOT/test_label.json 
+$DATASETROOT/LVLane_test_sunny.json
+$DATASETROOT/LVLane_train_sunny.json
 
 ```
 
-For Tusimple, the segmentation annotation is not provided, hence we need to generate segmentation from the json annotation. 
+We need to generate segmentation from the json annotation. 
 
 ```Shell
-python tools/generate_seg_tusimple.py --root $TUSIMPLEROOT
+python tools/generate_seg_tusimple.py --root $DATASETROOT
 # this will generate seg_label directory
 ```
 
 ## Getting Started
+If we want just detection, no lane classification, switch to `detection` branch by running `git checkout detection`.
 ### Training
 
 For training, run
@@ -169,7 +162,7 @@ python tools/detect.py configs/resa/resa34_culane.py --img images\
 
 
 ## Contributing
-We appreciate all contributions to improve LaneDet.  Any pull requests or issues are welcomed.
+We appreciate all contributions to improve LVLane.  Any pull requests or issues are welcomed.
 
 ## Licenses
 This project is released under the [Apache 2.0 license](LICNESE).
@@ -177,24 +170,21 @@ This project is released under the [Apache 2.0 license](LICNESE).
 
 ## Acknowledgement
 <!--ts-->
-* [open-mmlab/mmdetection](https://github.com/open-mmlab/mmdetection)
+* [Turoad/lanedet](https://github.com/Turoad/lanedet)
 * [pytorch/vision](https://github.com/pytorch/vision)
-* [cardwing/Codes-for-Lane-Detection](https://github.com/cardwing/Codes-for-Lane-Detection)
-* [XingangPan/SCNN](https://github.com/XingangPan/SCNN)
 * [ZJULearning/resa](https://github.com/ZJULearning/resa)
 * [cfzd/Ultra-Fast-Lane-Detection](https://github.com/cfzd/Ultra-Fast-Lane-Detection)
-* [lucastabelini/LaneATT](https://github.com/lucastabelini/LaneATT)
-* [aliyun/conditional-lane-detection](https://github.com/aliyun/conditional-lane-detection)
 <!--te-->
 
-<!-- 
+
 ## Citation
-If you use
+If you use our work or dataset, please cite the following paper:
 ```
-@misc{zheng2021lanedet,
-  author =       {Tu Zheng},
-  title =        {LaneDet},
-  howpublished = {\url{https://github.com/turoad/lanedet}},
-  year =         {2021}
+@article{rahman2023lvlane,
+  title={LVLane: Deep Learning for Lane Detection and Classification in Challenging Conditions},
+  author={Rahman, Zillur and Morris, Brendan Tran},
+  journal={2023 IEEE International Conference on Intelligent Trabsportation Systems (ITSC)},
+  year={2023}
 }
-``` -->
+
+```
