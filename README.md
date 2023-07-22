@@ -1,6 +1,6 @@
 # LVLane
 ## Introduction
-This repository is the official implementation of the paper "LVLane: Lane Detection and Classification in Challenging Conditions", accpeted in XYZ conference.
+This repository is the official implementation of the paper "[LVLane: Lane Detection and Classification in Challenging Conditions](https://arxiv.org/abs/2307.06853)", accpeted in 2023 IEEE International Conference on Intelligent Trabsportation Systems (ITSC).
 
 ![demo image](.github/test-class-lvlane-ufld2.jpg)
 
@@ -77,17 +77,17 @@ $DATASETROOT/test_label.json # test label json file
 
 ```
 ### LVLane
-Download [LVLane](). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset too, so replace the orginal labels ones with the new ones.
+Download [LVLane](https://drive.google.com/file/d/1lRhne-d87A4b0gLjf6quipDQ4MYvP7ky/view?usp=sharing). Then extract them to `$DATASETROOT` just like TuSimple dataset. This link contains class annotations for TuSimple dataset, so replace the orginal labels ones with the new ones. Lane annotations and class labels of Caltech dataset are also available in TuSimple format. Download the dataset from original site and resize them to 1280x720 to use with this model.
 
 ```
 $DATASETROOT/clips/0531/
 .
 .
-$DATASETROOT/clips/LVLane_train/
-$DATASETROOT/lable_data_xxxx.json
+$DATASETROOT/clips/LVLane_train_sunny/
+$DATASETROOT/label_data_xxxx.json
 $DATASETROOT/test_label.json 
-$DATASETROOT/LVLane_test.json
-$DATASETROOT/LVLane_train.json
+$DATASETROOT/LVLane_test_sunny.json
+$DATASETROOT/LVLane_train_sunny.json
 
 ```
 
@@ -176,14 +176,15 @@ This project is released under the [Apache 2.0 license](LICNESE).
 * [cfzd/Ultra-Fast-Lane-Detection](https://github.com/cfzd/Ultra-Fast-Lane-Detection)
 <!--te-->
 
-<!-- 
+
 ## Citation
-If you use
+If you use our work or dataset, please cite the following paper:
 ```
-@misc{zheng2021lanedet,
-  author =       {Tu Zheng},
-  title =        {LaneDet},
-  howpublished = {\url{https://github.com/turoad/lanedet}},
-  year =         {2021}
+@article{rahman2023lvlane,
+  title={LVLane: Deep Learning for Lane Detection and Classification in Challenging Conditions},
+  author={Rahman, Zillur and Morris, Brendan Tran},
+  journal={2023 IEEE International Conference on Intelligent Trabsportation Systems (ITSC)},
+  year={2023}
 }
-``` -->
+
+```
