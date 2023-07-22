@@ -17,13 +17,10 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
 SPLIT_FILES = {    
-    #'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json'],
-    #'val': ['test_label.json'],
-    #'test': ['test_label.json']
-    
-    'trainval': ['label_cordova1.json', 'label_cordova2.json','label_washington1.json'],
-    'val': ['label_washington2.json'],
-    'test': ['label_washington2.json']
+
+    'trainval': ['label_data_0313.json', 'label_data_0601.json', 'label_data_0531.json'],
+    'val': ['LVLane_test_sunny.json'],
+    'test': ['LVLane_test_sunny.json']
 }
 
 
@@ -39,9 +36,9 @@ class TuSimple(BaseDataset):
         self.logger.info('Loading TuSimple annotations...')
         self.data_infos = []
         max_lanes = 0
-        #df = {0:0, 1:1, 2:2, 3:3, 4:3, 5:4, 6:5, 7:6}
-        #df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1, 6:1, 7:1}
-        df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1}
+        #df = {0:0, 1:1, 2:2, 3:3, 4:3, 5:4, 6:5, 7:6}       # for 6 class
+        df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:2, 6:1, 7:1}      # for 2 class
+        #df = {0:0, 1:1, 2:1, 3:2, 4:2, 5:1}                # for caltech 2 class
         for anno_file in self.anno_files:
             anno_file = osp.join(self.data_root, anno_file)
             with open(anno_file, 'r') as anno_obj:

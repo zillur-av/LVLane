@@ -37,9 +37,9 @@ optimizer = dict(
 )
 #optimizer = dict(type='Adam', lr= 0.025, weight_decay = 0.0001)  # 3e-4 for batchsize 8
 
-epochs = 45
-batch_size = 10
-total_training_samples = 933
+epochs = 2
+batch_size = 4
+total_training_samples = 12
 total_iter = (total_training_samples // batch_size + 1) * epochs 
 
 import math
@@ -117,6 +117,5 @@ log_interval = 200
 eval_ep = 1
 save_ep = epochs
 row_anchor='tusimple_row_anchor'
-#test_json_file='data/tusimple/test_label.json'
-test_json_file = 'data/tusimple/label_washington2.json'
+test_json_file='data/tusimple/test_label.json'
 lr_update_by_epoch = False
