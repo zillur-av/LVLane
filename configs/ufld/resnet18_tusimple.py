@@ -39,7 +39,7 @@ optimizer = dict(
 
 epochs = 2
 batch_size = 4
-total_training_samples = 12
+total_training_samples = 3626
 total_iter = (total_training_samples // batch_size + 1) * epochs 
 
 import math

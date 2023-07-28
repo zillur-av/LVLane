@@ -170,6 +170,8 @@ class Runner(object):
                     y_pred.extend((score.cpu().numpy()).flatten('C').tolist())
 
                     classification_acc += self.test_loader.dataset.evaluate_classification(output['category'].cuda(), data['category'].cuda())
+            if self.cfg.view:
+                self.test_loader.dataset.view(detection_output, data['meta'])
         
         end.record()
         torch.cuda.synchronize()  

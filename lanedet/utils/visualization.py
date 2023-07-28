@@ -22,7 +22,7 @@ def getcolor(code):
 
 
 def imshow_lanes(img, lanes, show=False, out_file=None, lane_classes = None, num_classes=2):
-    img = np.zeros((720, 1280, 3))
+    #img = np.zeros((720, 1280, 3))
     
     if lane_classes is not None:
         if num_classes == 6:
