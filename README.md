@@ -129,7 +129,7 @@ python main.py configs/ufld/resnet18_tusimple.py --test --load_from ufld_tusimpl
 Currently, this code can output the visualization result when testing, just add `--view`.
 We will get the visualization result in `work_dirs/xxx/xxx/visualization`.
 
-I am providing a sample weights for quick testing. You can download it from [here](https://drive.google.com/file/d/1e4GTIxSLoKEWdsJqQJ0t_oimg1Tb1SJG/view?usp=sharing) and put it on `$LANEDET_ROOT`. If you want to test your own images, create the json file and image folders following above instructions. Then edit `val` and `test` in https://github.com/zillur-av/LVLane/blob/943dbd3ac043bcee64c061b2db8e55e802bfc07f/lanedet/datasets/tusimple.py#L21 and in configs file https://github.com/zillur-av/LVLane/blob/943dbd3ac043bcee64c061b2db8e55e802bfc07f/configs/ufld/resnet18_tusimple.py#L120.
+I am providing a sample weights for quick testing. You can download it from [here](https://drive.google.com/file/d/1YYWE-KiihE2c4BtYHeR2BuzXQkwjk0J3/view?usp=sharing) and put it on `$LANEDET_ROOT`. If you want to test your own images, create the json file and image folders following above instructions. Then edit `val` and `test` in https://github.com/zillur-av/LVLane/blob/943dbd3ac043bcee64c061b2db8e55e802bfc07f/lanedet/datasets/tusimple.py#L21 and in configs file https://github.com/zillur-av/LVLane/blob/943dbd3ac043bcee64c061b2db8e55e802bfc07f/configs/ufld/resnet18_tusimple.py#L120.
 
 For example, run
 ```Shell
