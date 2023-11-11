@@ -114,6 +114,12 @@ For example, run
 ```Shell
 python main.py configs/ufld/resnet18_tusimple.py --gpus 0
 ```
+Modifications before you run training script:
+* Check image resolution in here https://github.com/zillur-av/LVLane/blob/f89d53d63b45069fdae6689157c7f33caa6c8652/configs/ufld/resnet18_tusimple.py#L56-L61
+  If your images have different resolution, try to resize them to 1280x720. Modify the annotations proportionately as well. This will be the best way to handle that situation.
+* Modify batch size, number of training samples, epochs in https://github.com/zillur-av/LVLane/blob/f89d53d63b45069fdae6689157c7f33caa6c8652/configs/ufld/resnet18_tusimple.py#L40-L43
+
+
 
 ### Testing
 For testing, run
